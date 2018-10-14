@@ -1,4 +1,0 @@
-INDEX VERSION 1.130+/Users/jordanung/Downloads/SWEN30006_2018S2_PartC/assets/.metadata/.plugins/org.eclipse.jdt.core
-1175494123.index
-1446123272.index
-3529386038.index
