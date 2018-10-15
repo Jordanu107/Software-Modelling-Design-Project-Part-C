@@ -41,15 +41,11 @@ public class Mapping {
 	}
 	
 	public void articulateViewPoint(HashMap<Coordinate, MapTile> currentView) {
-		Iterator currentMapTile = currentView.entrySet().iterator();
-		while (currentMapTile.hasNext()) {
-			Map<Coordinate, MapTile> mapInfo = (Map<Coordinate, MapTile>) currentMapTile.next();
-			//Do something with the mapInfo that we have here
+		for (Map.Entry<Coordinate, MapTile> mapInfo : currentView.entrySet()) {
+			//System.out.println("Coordinates are " + mapInfo.getKey() + " and maptile is" + mapInfo.getValue());
 			
-			currentMapTile.remove();
+			//TODO - Do something base on tile type
 		}
-		// Iterate through every coordinate in HashMap, from MapTile determine nature
-		// If point of interest, take note of it
 	}
 	// TODO - The logic behind finding a key
 	// Should a sort of explore() via BFS/DFS function be implemented here
