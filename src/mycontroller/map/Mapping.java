@@ -1,4 +1,4 @@
-package mycontroller;
+package mycontroller.map;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,7 +43,7 @@ public class Mapping {
 	public void articulateViewPoint(HashMap<Coordinate, MapTile> currentView) {
 		for (Map.Entry<Coordinate, MapTile> mapInfo : currentView.entrySet()) {
 			//System.out.println("Coordinates are " + mapInfo.getKey() + " and maptile is" + mapInfo.getValue());
-			
+
 			//TODO - Do something base on tile type
 		}
 	}
