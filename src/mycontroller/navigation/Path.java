@@ -30,29 +30,11 @@ public class Path {
 	/**
 	 * Adds a new point to the path, only if it is valid.
 	 * @param step
-	 * @return whether or not the point was successfully added
+	 * @return whether or not the point was succesfully added
 	 */
 	public boolean addToPath(Coordinate point) {
 		if (checkAdjacency(path.get(path.size()-1), point)) {
 			path.add(point);
-			return true;
-		}
-		
-		return false;
-	}
-	
-	/**
-	 * Appends a given path onto the current path, only if it is valid
-	 * @param path
-	 * @return whether or not the point was successfully added
-	 */
-	public boolean addToPath(Path newPath) {
-		ArrayList<Coordinate> coords = newPath.getCoords();
-		
-		// the new path must start where the old path ended
-		if (coords.size() > 1 && path.get(path.size() - 1) == coords.get(0)) {
-			coords.remove(0);
-			path.addAll(coords);
 			return true;
 		}
 		
@@ -123,9 +105,5 @@ public class Path {
 	 */
 	private static boolean checkAdjacency(Coordinate a, Coordinate b) {
 		return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) == 1 ;
-	}
-	
-	public ArrayList<Coordinate> getCoords() {
-		return this.path;
 	}
 }
