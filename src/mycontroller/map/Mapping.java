@@ -61,6 +61,7 @@ public class Mapping {
         					if (lavaTrap.getKey() > 0 && !keys.containsKey(mapInfo.getKey())) {
         						keys.put(mapInfo.getKey(), lavaTrap.getKey());
         					}
+        					addPointOfInterest(coordinate, type);
         					break;
         				// One of the other traps
         				default:
