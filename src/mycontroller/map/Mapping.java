@@ -22,10 +22,12 @@ import utilities.Coordinate;
 public class Mapping {
 	private HashMap<Coordinate, Integer> keys;
 	private HashMap<Coordinate, String> pointsOfInterest;
+	private ArrayList<Coordinate> deadEnds;
 	
 	public Mapping() {
 		keys = new HashMap<>();
 		pointsOfInterest = new HashMap<>();
+		deadEnds = new ArrayList<>();
 	}
 	
 	public HashMap<Coordinate, Integer> getKeysSeen() {
@@ -36,10 +38,6 @@ public class Mapping {
 		return pointsOfInterest;
 	}
 	
-	public void addFoundKey(Coordinate coordinate, Integer value) {
-		keys.put(coordinate, value);
-	}
-	
 	public void addPointOfInterest(Coordinate coordinate, String type) {
 		pointsOfInterest.put(coordinate, type);
 	}
@@ -48,24 +46,33 @@ public class Mapping {
 		// Iterate through all the tiles that the car can currently see
         for (Map.Entry<Coordinate, MapTile> mapInfo : currentView.entrySet()) {
         		Coordinate coordinate = mapInfo.getKey();
-        		String type = mapInfo.getValue().getType().toString();
+        		MapTile mapTile = mapInfo.getValue();
         		
         		// Check if the tile being inspected is a trap
-        		if (mapInfo.getValue() instanceof TrapTile && !pointsOfInterest.containsKey(coordinate)) {
+        		if (mapTile instanceof TrapTile && !pointsOfInterest.containsKey(coordinate)) {
+        			TrapTile trapTile = (TrapTile) mapTile;
+        			String type = trapTile.getTrap();
         			switch (type) {
         				case "lava":
-        					LavaTrap lavaTrap = (LavaTrap) mapInfo.getValue();
+        					LavaTrap lavaTrap = (LavaTrap) trapTile;
+        					int key = lavaTrap.getKey();
         					
         					// A key exists within the lava
-        					if (lavaTrap.getKey() > 0 && !keys.containsKey(mapInfo.getKey())) {
-        						keys.put(mapInfo.getKey(), lavaTrap.getKey());
+        					if (key > 0 && !keys.containsKey(key)) {
+        						keys.put(mapInfo.getKey(), key);
         					}
+        					addPointOfInterest(coordinate, type);
         					break;
         				// One of the other traps
         				default:
         					addPointOfInterest(coordinate, type);
         					break;
         			}
+        		}
+        		
+        		// In case the map tile is a dead end
+        		if (mapTile.getType().toString().equals("WALL")) {
+        			deadEnds.add(coordinate);
         		}
 		}
         
