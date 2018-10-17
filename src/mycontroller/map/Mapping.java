@@ -48,10 +48,11 @@ public class Mapping {
 		// Iterate through all the tiles that the car can currently see
         for (Map.Entry<Coordinate, MapTile> mapInfo : currentView.entrySet()) {
         		Coordinate coordinate = mapInfo.getKey();
-        		String type = mapInfo.getValue().getType().toString();
         		
         		// Check if the tile being inspected is a trap
         		if (mapInfo.getValue() instanceof TrapTile && !pointsOfInterest.containsKey(coordinate)) {
+        			TrapTile tile = (TrapTile) mapInfo.getValue();
+        			String type = tile.getTrap();
         			switch (type) {
         				case "lava":
         					LavaTrap lavaTrap = (LavaTrap) mapInfo.getValue();
