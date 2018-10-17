@@ -30,6 +30,7 @@ public class Mapping {
 		deadEnds = new ArrayList<>();
 	}
 	
+	// Returns keys that have been seen by player
 	public HashMap<Coordinate, Integer> getKeysSeen() {
 		return keys;
 	}
@@ -38,11 +39,33 @@ public class Mapping {
 		return pointsOfInterest;
 	}
 	
+	public ArrayList<Coordinate> getDeadEnds() {
+		return deadEnds;
+	}
+	
+	public String getTypeByCoordinate(Coordinate coordinate) {
+		// Check if there is a trap and which type of trap it is
+		for (Map.Entry<Coordinate, String> mapInfo : pointsOfInterest.entrySet()) {
+			if (mapInfo.getKey().equals(coordinate)) {
+				return mapInfo.getValue();
+			}
+		}
+		
+		// Check whether the type of mapTile at the point is a wall
+		for (Coordinate deadEnd : deadEnds) {
+			if (coordinate.equals(deadEnd)) {
+				return "wall";
+			}
+		}
+		return null;
+	}
+	
 	public void addPointOfInterest(Coordinate coordinate, String type) {
 		pointsOfInterest.put(coordinate, type);
 	}
 	
 	public void articulateViewPoint(HashMap<Coordinate, MapTile> currentView) {
+		
 		// Iterate through all the tiles that the car can currently see
         for (Map.Entry<Coordinate, MapTile> mapInfo : currentView.entrySet()) {
         		Coordinate coordinate = mapInfo.getKey();
@@ -63,6 +86,7 @@ public class Mapping {
         					}
         					addPointOfInterest(coordinate, type);
         					break;
+        					
         				// One of the other traps
         				default:
         					addPointOfInterest(coordinate, type);
