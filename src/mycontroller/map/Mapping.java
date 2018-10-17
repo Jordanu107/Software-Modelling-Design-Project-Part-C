@@ -51,11 +51,11 @@ public class Mapping {
         		
         		// Check if the tile being inspected is a trap
         		if (mapInfo.getValue() instanceof TrapTile && !pointsOfInterest.containsKey(coordinate)) {
-        			TrapTile tile = (TrapTile) mapInfo.getValue();
-        			String type = tile.getTrap();
+        			TrapTile trapTile = (TrapTile) mapInfo.getValue();
+        			String type = trapTile.getTrap();
         			switch (type) {
         				case "lava":
-        					LavaTrap lavaTrap = (LavaTrap) mapInfo.getValue();
+        					LavaTrap lavaTrap = (LavaTrap) trapTile;
         					
         					// A key exists within the lava
         					if (lavaTrap.getKey() > 0 && !keys.containsKey(mapInfo.getKey())) {
