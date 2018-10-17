@@ -21,7 +21,7 @@ import utilities.Coordinate;
 
 public class Mapping {
 	private HashMap<Coordinate, Integer> keys;
-	private HashMap<Coordinate, String> pointsOfInterest;
+	private HashMap<Coordinate, MapTile> pointsOfInterest;
 	private ArrayList<Coordinate> deadEnds;
 	
 	public Mapping() {
@@ -35,7 +35,7 @@ public class Mapping {
 		return keys;
 	}
 	
-	public HashMap<Coordinate, String> getPointsOfInterest() {
+	public HashMap<Coordinate, MapTile> getPointsOfInterest() {
 		return pointsOfInterest;
 	}
 	
@@ -43,9 +43,9 @@ public class Mapping {
 		return deadEnds;
 	}
 	
-	public String getTypeByCoordinate(Coordinate coordinate) {
+	public MapTile getTypeByCoordinate(Coordinate coordinate) {
 		// Check if there is a trap and which type of trap it is
-		for (Map.Entry<Coordinate, String> mapInfo : pointsOfInterest.entrySet()) {
+		for (Map.Entry<Coordinate, MapTile> mapInfo : pointsOfInterest.entrySet()) {
 			if (mapInfo.getKey().equals(coordinate)) {
 				return mapInfo.getValue();
 			}
@@ -54,14 +54,14 @@ public class Mapping {
 		// Check whether the type of mapTile at the point is a wall
 		for (Coordinate deadEnd : deadEnds) {
 			if (coordinate.equals(deadEnd)) {
-				return "wall";
+				return new MapTile(MapTile.Type.WALL);
 			}
 		}
 		return null;
 	}
 	
-	public void addPointOfInterest(Coordinate coordinate, String type) {
-		pointsOfInterest.put(coordinate, type);
+	public void addPointOfInterest(Coordinate coordinate, MapTile mapTile) {
+		pointsOfInterest.put(coordinate, mapTile);
 	}
 	
 	public void articulateViewPoint(HashMap<Coordinate, MapTile> currentView) {
@@ -81,15 +81,15 @@ public class Mapping {
         					int key = lavaTrap.getKey();
         					
         					// A key exists within the lava
-        					if (key > 0 && !keys.containsKey(key)) {
+        					if (key > 0 && !keys.containsValue(key)) {
         						keys.put(mapInfo.getKey(), key);
         					}
-        					addPointOfInterest(coordinate, type);
+        					addPointOfInterest(coordinate, mapTile);
         					break;
         					
         				// One of the other traps
         				default:
-        					addPointOfInterest(coordinate, type);
+        					addPointOfInterest(coordinate, mapTile);
         					break;
         			}
         		}
@@ -99,17 +99,5 @@ public class Mapping {
         			deadEnds.add(coordinate);
         		}
 		}
-        
-//        // Print location and key #
-//        for (Map.Entry<Coordinate, Integer> key : keys.entrySet()) {
-//        		System.out.println("The key " + key.getValue() + " is at " + key.getKey());
-//        }
-//        System.out.println("---------------All Keys Processed---------------");
-//        
-//        // Print location of dead ends
-//        for (Map.Entry<Coordinate, String> point : pointsOfInterest.entrySet()) {
-//        		System.out.println("The coordinate " + point.getKey() + " is the tile of " + point.getValue() + " !");
-//        }
-//        System.out.println("---------------All Dead Ends Processed---------------");
 	}
 }
