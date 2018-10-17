@@ -21,6 +21,7 @@ import utilities.Coordinate;
 public class Mapping {
 	private HashMap<Coordinate, Integer> keys;
 	private HashMap<Coordinate, String> pointsOfInterest;
+	public static Mapping map;
 	
 	public Mapping() {
 		keys = new HashMap<>();
