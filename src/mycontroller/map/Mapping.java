@@ -9,6 +9,7 @@ import tiles.LavaTrap;
 import tiles.MapTile;
 import tiles.MapTile.Type;
 import tiles.MudTrap;
+import tiles.TrapTile;
 import utilities.Coordinate;
 
 /**
@@ -48,33 +49,36 @@ public class Mapping {
         for (Map.Entry<Coordinate, MapTile> mapInfo : currentView.entrySet()) {
         		Coordinate coordinate = mapInfo.getKey();
         		String type = mapInfo.getValue().getType().toString();
-			
-        		// Check every lava tile for any keys within the tile
-        		if (mapInfo.getValue() instanceof LavaTrap) {
-				LavaTrap lavaTrap = (LavaTrap) mapInfo.getValue();
-				
-				// A key exists within the lava
-				if (lavaTrap.getKey() > 0 && !keys.containsKey(mapInfo.getKey())) {
-					keys.put(mapInfo.getKey(), lavaTrap.getKey());
-				}
-			}
         		
-        		// Found a Mud Trap i.e. game over when traversed over
-        		if (mapInfo.getValue() instanceof MudTrap && !pointsOfInterest.containsKey(coordinate)) {
-        			addPointOfInterest(coordinate, type);
+        		// Check if the tile being inspected is a trap
+        		if (mapInfo.getValue() instanceof TrapTile && !pointsOfInterest.containsKey(coordinate)) {
+        			switch (type) {
+        				case "lava":
+        					LavaTrap lavaTrap = (LavaTrap) mapInfo.getValue();
+        					
+        					// A key exists within the lava
+        					if (lavaTrap.getKey() > 0 && !keys.containsKey(mapInfo.getKey())) {
+        						keys.put(mapInfo.getKey(), lavaTrap.getKey());
+        					}
+        					break;
+        				// One of the other traps
+        				default:
+        					addPointOfInterest(coordinate, type);
+        					break;
+        			}
         		}
 		}
         
-        // Print location and key #
-        for (Map.Entry<Coordinate, Integer> key : keys.entrySet()) {
-        		System.out.println("The key " + key.getValue() + " is at " + key.getKey());
-        }
-        System.out.println("---------------All Keys Processed---------------");
-        
-        // Print location of dead ends
-        for (Map.Entry<Coordinate, String> point : pointsOfInterest.entrySet()) {
-        		System.out.println("The coordinate " + point.getKey() + " is the tile of " + point.getValue() + " !");
-        }
-        System.out.println("---------------All Dead Ends Processed---------------");
+//        // Print location and key #
+//        for (Map.Entry<Coordinate, Integer> key : keys.entrySet()) {
+//        		System.out.println("The key " + key.getValue() + " is at " + key.getKey());
+//        }
+//        System.out.println("---------------All Keys Processed---------------");
+//        
+//        // Print location of dead ends
+//        for (Map.Entry<Coordinate, String> point : pointsOfInterest.entrySet()) {
+//        		System.out.println("The coordinate " + point.getKey() + " is the tile of " + point.getValue() + " !");
+//        }
+//        System.out.println("---------------All Dead Ends Processed---------------");
 	}
 }
