@@ -26,6 +26,15 @@ public class Path {
 		}
 	}
 	
+	// deep copy
+	public Path(Path path) {
+		this.path = new ArrayList<Coordinate>();
+		
+		for (Coordinate step : path.getCoords()) {
+			this.path.add(step);
+		}
+	}
+	
 	
 	/**
 	 * Adds a new point to the path, only if it is valid.
@@ -33,6 +42,11 @@ public class Path {
 	 * @return whether or not the point was successfully added
 	 */
 	public boolean addToPath(Coordinate point) {
+		if (path.isEmpty()) {
+			path.add(point);
+			return true;
+		}
+		
 		Coordinate lastPoint = path.get(path.size()-1);
 		if (lastPoint.equals(point) || checkAdjacency(lastPoint, point)) {
 			path.add(point);
@@ -58,6 +72,10 @@ public class Path {
 		}
 		
 		return false;
+	}
+	
+	public Coordinate popFromPath() {
+		return path.remove(path.size()-1);
 	}
 	
 	
