@@ -1,8 +1,10 @@
 package mycontroller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,7 +39,7 @@ public class ExploreController extends CarController {
 		map = getMap();
 		isRoadExplored = new HashMap<>();
 		for (Entry<Coordinate, MapTile> entry : map.entrySet()) {
-			if (entry.getValue().isType(Type.ROAD))
+			if (entry.getValue().isType(Type.ROAD) || entry.getValue().isType(Type.START) || entry.getValue().isType(Type.FINISH))
 				isRoadExplored.put(entry.getKey(), false);
 		}
 		moveStatus = MoveStatus.STOP;
@@ -47,13 +49,13 @@ public class ExploreController extends CarController {
 	public void update() {
 		Map<Coordinate, MapTile> view = getView();
 		recordView(view);
-		Direction d = AIDirections(view);
+		Direction d = nextDirection(view);
 		moveIn(d);
 	}
 
 	private void recordView(Map<Coordinate, MapTile> view) {
 		for (Entry<Coordinate, MapTile> entry : view.entrySet()) {
-			if (entry.getValue().isType(Type.TRAP) || entry.getValue().isType(Type.ROAD)) {
+			if (entry.getValue().isType(Type.TRAP) || entry.getValue().isType(Type.ROAD) || entry.getValue().isType(Type.START) || entry.getValue().isType(Type.FINISH)) {
 				map.put(entry.getKey(), entry.getValue());
 				isRoadExplored.put(entry.getKey(), true);
 			}
@@ -68,7 +70,7 @@ public class ExploreController extends CarController {
 		return true;
 	}
 
-	private Direction AIDirections(Map<Coordinate, MapTile> view) {
+	private Direction nextDirection(Map<Coordinate, MapTile> view) {
 		Coordinate carPos = new Coordinate(getPosition());
 		List<Coordinate> possibleOut = new ArrayList<>();
 		for (int x = carPos.x - getViewSquare(); x <= carPos.x + getViewSquare(); x++) {
@@ -104,99 +106,134 @@ public class ExploreController extends CarController {
 			}
 		}
 		Map<Coordinate, Direction> candidates = nextMoveDirections(carPos, possibleOut, view);
-		/*
+
 		for (Entry<Coordinate, Direction> entry : candidates.entrySet()) {
 			Coordinate adjacent = null;
-			int adjacentX = entry.getKey().x;
-			int adjacentY = entry.getKey().y;
-			if (adjacentX - carPos.x == getViewSquare()) {
-				adjacent = new Coordinate(adjacentX + 1, adjacentY);
-			} else if (adjacentX - carPos.x == -getViewSquare()) {
-				adjacent = new Coordinate(adjacentX - 1, adjacentY);
-			} else if (adjacentY - carPos.y == getViewSquare()) {
-				adjacent = new Coordinate(adjacentX, adjacentY + 1);
-			} else if (adjacentY - carPos.y == -getViewSquare()) {
-				adjacent = new Coordinate(adjacentX, adjacentY - 1);
+			int outX = entry.getKey().x;
+			int outY = entry.getKey().y;
+			if (outX - carPos.x == getViewSquare()) {
+				adjacent = new Coordinate(outX + 1, outY);
+			} else if (outX - carPos.x == -getViewSquare()) {
+				adjacent = new Coordinate(outX - 1, outY);
+			} else if (outY - carPos.y == getViewSquare()) {
+				adjacent = new Coordinate(outX, outY + 1);
+			} else if (outY - carPos.y == -getViewSquare()) {
+				adjacent = new Coordinate(outX, outY - 1);
 			}
-			if (!isRoadExplored.get(adjacent)){
+			if (!map.get(adjacent).isType(Type.WALL) && !isRoadExplored.get(adjacent)) {
 				return entry.getValue();
 			}
 		}
-		*/
-		Direction nextDirection = null;
-		int northCount = 0, eastCount = 0, southCount = 0, westCount = 0, max = 0;
-		for (Entry<Coordinate, Direction> entry : candidates.entrySet()) {
-			switch (entry.getValue()) {
-			case NORTH:
-				northCount ++;
-				if (northCount > max) {
-					max = northCount;
-					nextDirection = Direction.NORTH;
-				}
-				break;
-			case EAST:
-				eastCount ++;
-				if (eastCount > max) {
-					max = eastCount;
-					nextDirection = Direction.EAST;
-				}
-				break;
-			case SOUTH:
-				southCount ++;
-				if (southCount > max) {
-					max = southCount;
-					nextDirection = Direction.SOUTH;
-				}
-				break;
-			case WEST:
-				westCount ++;
-				if (westCount > max) {
-					max = westCount;
-					nextDirection = Direction.WEST;
-				}
-				break;
-			default:
-				break;
-			}
-		}
-		return nextDirection;
-		
+		return null;
+
+//		Direction nextDirection = null;
+//		int northCount = 0, eastCount = 0, southCount = 0, westCount = 0, max = 0;
+//		for (Entry<Coordinate, Direction> entry : candidates.entrySet()) {
+//			switch (entry.getValue()) {
+//			case NORTH:
+//				northCount++;
+//				if (northCount > max) {
+//					max = northCount;
+//					nextDirection = Direction.NORTH;
+//				}
+//				break;
+//			case EAST:
+//				eastCount++;
+//				if (eastCount > max) {
+//					max = eastCount;
+//					nextDirection = Direction.EAST;
+//				}
+//				break;
+//			case SOUTH:
+//				southCount++;
+//				if (southCount > max) {
+//					max = southCount;
+//					nextDirection = Direction.SOUTH;
+//				}
+//				break;
+//			case WEST:
+//				westCount++;
+//				if (westCount > max) {
+//					max = westCount;
+//					nextDirection = Direction.WEST;
+//				}
+//				break;
+//			default:
+//				break;
+//			}
+//		}
+//		return nextDirection;
+
 	}
 
-	private Map<Coordinate, Direction> nextMoveDirections(Coordinate car, List<Coordinate> outs, Map<Coordinate, MapTile> view) {
+	private Map<Coordinate, Direction> nextMoveDirections(Coordinate car, List<Coordinate> outs,
+			Map<Coordinate, MapTile> view) {
 		Map<Coordinate, Boolean> visited = new HashMap<>();
 		for (Coordinate key : view.keySet()) {
 			visited.put(key, false);
 		}
 		Map<Coordinate, Direction> feasibleMove = new HashMap<>();
-		Stack<Coordinate> stack = new Stack<>();
-		stack.push(car);
-		Coordinate carNeighbour = null;
 		Map<Coordinate, Direction> availableNextMove = availableNextCoor(view);
-		while (!stack.isEmpty()) {
-			Coordinate v = stack.pop();
-			if (!visited.get(v)) {
-				visited.put(v, true);
-				if (availableNextMove.containsKey(v)) {
-					carNeighbour = v;
-				}
-				if (outs.contains(v)) {
-					feasibleMove.put(v, availableNextMove.get(carNeighbour));
-				}
-				if (v == car) {
-					for (Coordinate w : availableNextMove.keySet()) {
-						stack.push(w);
+		LinkedList<Coordinate> queue = new LinkedList<>();
+		Map<Coordinate, Coordinate> parent = new HashMap<>();
+		
+		/* BFS */
+		queue.add(car);
+		visited.put(car, true);
+		while (!queue.isEmpty()) {
+			Coordinate v = queue.poll();
+			if (outs.contains(v)) {
+				List<Coordinate> path = backtrace(parent, car, v);
+				Direction firstMove = coordinateToDirection(car, path.get(1));
+				feasibleMove.put(v, firstMove);
+			}
+			if (v == car) {
+				for (Coordinate w : availableNextMove.keySet()) {
+					if (!visited.get(w)) {
+						queue.add(w);
+						visited.put(w, true);
+						parent.put(w, v);
 					}
-				} else {
-					for (Coordinate w : getNeighbour(v, view)) {
-						stack.push(w);
+				}
+			} else {
+				for (Coordinate w : getNeighbour(v, view)) {
+					if (!visited.get(w)) {
+						queue.add(w);
+						visited.put(w, true);
+						parent.put(w, v);
 					}
 				}
 			}
 		}
 		return feasibleMove;
+		
 	}
 
+	private List<Coordinate> backtrace(Map<Coordinate, Coordinate> parent, Coordinate start, Coordinate end) {
+		List<Coordinate> path = new ArrayList<>();
+		path.add(end);
+		while(path.get(path.size()-1) != start) {
+			path.add(parent.get(path.get(path.size()-1)));
+		}
+		Collections.reverse(path);
+		return path;
+	}
+	
+	private Direction coordinateToDirection(Coordinate start, Coordinate end) {
+		int deltaX = end.x - start.x;
+		int deltaY = end.y - start.y;
+		if (deltaX > 0) {
+			return Direction.EAST;
+		} else if (deltaX < 0) {
+			return Direction.WEST;
+		} else if (deltaY > 0) {
+			return Direction.NORTH;
+		} else if (deltaY < 0) {
+			return Direction.SOUTH;
+		}
+		return null;
+	}
+	
 	private List<Coordinate> getNeighbour(Coordinate v, Map<Coordinate, MapTile> view) {
 		List<Coordinate> neighbours = new ArrayList<>();
 		Coordinate carPos = new Coordinate(getPosition());
