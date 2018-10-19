@@ -77,7 +77,7 @@ public class ExploreController extends CarController {
 			int y = carPos.y + getViewSquare();
 			Coordinate c = new Coordinate(x, y);
 			MapTile tile = view.get(c);
-			if (tile.isType(Type.ROAD)) {
+			if (!tile.isType(Type.WALL)) {
 				possibleOut.add(c);
 			}
 		}
@@ -85,7 +85,7 @@ public class ExploreController extends CarController {
 			int y = carPos.y - getViewSquare();
 			Coordinate c = new Coordinate(x, y);
 			MapTile tile = view.get(c);
-			if (tile.isType(Type.ROAD)) {
+			if (!tile.isType(Type.WALL)) {
 				possibleOut.add(c);
 			}
 		}
@@ -93,7 +93,7 @@ public class ExploreController extends CarController {
 			int x = carPos.x + getViewSquare();
 			Coordinate c = new Coordinate(x, y);
 			MapTile tile = view.get(c);
-			if (tile.isType(Type.ROAD)) {
+			if (!tile.isType(Type.WALL)) {
 				possibleOut.add(c);
 			}
 		}
@@ -101,7 +101,7 @@ public class ExploreController extends CarController {
 			int x = carPos.x - getViewSquare();
 			Coordinate c = new Coordinate(x, y);
 			MapTile tile = view.get(c);
-			if (tile.isType(Type.ROAD)) {
+			if (!tile.isType(Type.WALL)) {
 				possibleOut.add(c);
 			}
 		}
@@ -249,7 +249,7 @@ public class ExploreController extends CarController {
 				iter.remove();
 				continue;
 			}
-			if (!view.get(neighbour).isType(Type.ROAD)) {
+			if (view.get(neighbour).isType(Type.WALL)) {
 				iter.remove();
 			}
 		}
