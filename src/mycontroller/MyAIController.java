@@ -16,18 +16,18 @@ public class MyAIController extends CarController{
 	
 	public MyAIController(Car car) {
 		super(car);
-		Mapping map = new Mapping();
-		Mapping.map.pointsOfInterest = World.getMap();
+		
+		Mapping.getMap().pointsOfInterest = World.getMap();
+		
 		HashMap<Coordinate, Integer> keys = new HashMap<Coordinate, Integer>();
-		for (Coordinate key : Mapping.map.pointsOfInterest.keySet()) {
-			MapTile tile = Mapping.map.pointsOfInterest.get(key);
+		for (Coordinate key : Mapping.getMap().pointsOfInterest.keySet()) {
+			MapTile tile = Mapping.getMap().pointsOfInterest.get(key);
 			
 			if (tile instanceof LavaTrap && ((LavaTrap) tile).getKey() != 0) {
 				keys.put(key, ((LavaTrap) tile).getKey());
 			}
 		}
-		
-		Mapping.map.keys = keys;
+		Mapping.getMap().keys = keys;
 		
 		control = new Escape(car);
 	}

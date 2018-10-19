@@ -26,16 +26,14 @@ public class Mapping {
 		return Mapping.instance;
 	}
 	
-	private HashMap<Coordinate, Integer> keys;
-	private HashMap<Coordinate, MapTile> pointsOfInterest;
+	public HashMap<Coordinate, Integer> keys;
+	public HashMap<Coordinate, MapTile> pointsOfInterest;
 	private ArrayList<Coordinate> deadEnds;
 	
 	public Mapping() {
 		keys = new HashMap<>();
 		pointsOfInterest = new HashMap<>();
 		deadEnds = new ArrayList<>();
-		
-		Mapping.map = this;
 	}
 	
 	// Returns keys that have been seen by player
