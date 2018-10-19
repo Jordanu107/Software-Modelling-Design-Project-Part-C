@@ -26,6 +26,15 @@ public class Path {
 		}
 	}
 	
+	// deep copy
+	public Path(Path path) {
+		this.path = new ArrayList<Coordinate>();
+		
+		for (Coordinate step : path.getCoords()) {
+			this.path.add(step);
+		}
+	}
+	
 	
 	/**
 	 * Adds a new point to the path, only if it is valid.
@@ -33,7 +42,13 @@ public class Path {
 	 * @return whether or not the point was successfully added
 	 */
 	public boolean addToPath(Coordinate point) {
-		if (checkAdjacency(path.get(path.size()-1), point)) {
+		if (path.isEmpty()) {
+			path.add(point);
+			return true;
+		}
+		
+		Coordinate lastPoint = path.get(path.size()-1);
+		if (lastPoint.equals(point) || checkAdjacency(lastPoint, point)) {
 			path.add(point);
 			return true;
 		}
@@ -59,6 +74,10 @@ public class Path {
 		return false;
 	}
 	
+	public Coordinate popFromPath() {
+		return path.remove(path.size()-1);
+	}
+	
 	
 	public Coordinate getStep(int stepIndex) {
 		return path.get(stepIndex);
@@ -77,10 +96,20 @@ public class Path {
 		if (step + 1 >= path.size()) {
 			return null;
 		}
-		
+
 		Coordinate a = path.get(step);
 		Coordinate b = path.get(step+1);
 		
+		return fromToDirection(a, b);
+	}
+	
+	/**
+	 * Returns the direction from a to b, given that they are adjacent
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static Direction fromToDirection(Coordinate a, Coordinate b) {
 		// since we assume the path is valid, only one of x and y should change between steps
 		if (a.x < b.x) {
 			return Direction.EAST;
@@ -95,7 +124,7 @@ public class Path {
 			return Direction.SOUTH;
 		}
 		
-		// should not happen
+		// there is no movement between these steps
 		return null;
 	}
 	
@@ -106,7 +135,9 @@ public class Path {
 	 */
 	private static boolean validatePath(ArrayList<Coordinate> path) {
 		for (int i = 0; i < path.size() - 1; i++) {
-			if (!Path.checkAdjacency(path.get(i), path.get(i+1))) {
+			Coordinate before = path.get(i);
+			Coordinate after = path.get(i+1);
+			if (before.equals(after) || !Path.checkAdjacency(before, after)) {
 				return false;
 			}
 		}
