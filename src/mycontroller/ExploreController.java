@@ -65,6 +65,8 @@ public class ExploreController extends CarController {
 	private Direction nextDirection(Map<Coordinate, MapTile> view) {
 		Coordinate carPos = new Coordinate(getPosition());
 		List<Coordinate> possibleOut = new ArrayList<>();
+		
+		/* record tiles on edges of the 9*9 view that are not walls, which means possible move directions */
 		for (int x = carPos.x - getViewSquare(); x <= carPos.x + getViewSquare(); x++) {
 			int y = carPos.y + getViewSquare();
 			Coordinate c = new Coordinate(x, y);
@@ -116,9 +118,9 @@ public class ExploreController extends CarController {
 				return entry.getValue();
 			}
 		}
-		return null;	// should't happen
+		// if tiles around the view are all explored, go to an unconnected unvisited tile.
 		
-
+		return null;	// should't happen
 	}
 
 	private Map<Coordinate, Direction> nextMoveDirections(Coordinate car, List<Coordinate> outs,
@@ -132,7 +134,7 @@ public class ExploreController extends CarController {
 		LinkedList<Coordinate> queue = new LinkedList<>();
 		Map<Coordinate, Coordinate> parent = new HashMap<>();
 		
-		/* BFS */
+		/* BFS to check if there is a way to an out tile */
 		queue.add(car);
 		visited.put(car, true);
 		while (!queue.isEmpty()) {
@@ -292,22 +294,22 @@ public class ExploreController extends CarController {
 		return true;
 	}
 
-	private void moveIn(Direction d) {
-		System.out.println("Go " + d);
-		if (getOrientation() == d) {
+	private void moveIn(Direction direction) {
+		System.out.println("Go " + direction);
+		if (getOrientation() == direction) {
 			System.out.println("Forward");
 			moveForward();
-		} else if (WorldSpatial.reverseDirection(getOrientation()) == d) {
+		} else if (WorldSpatial.reverseDirection(getOrientation()) == direction) {
 			System.out.println("Backward");
 			moveBackward();
-		} else if (WorldSpatial.changeDirection(getOrientation(), RelativeDirection.LEFT) == d) {
+		} else if (WorldSpatial.changeDirection(getOrientation(), RelativeDirection.LEFT) == direction) {
 			System.out.println("Left");
 			turnLeft();
-		} else if (WorldSpatial.changeDirection(getOrientation(), RelativeDirection.RIGHT) == d) {
+		} else if (WorldSpatial.changeDirection(getOrientation(), RelativeDirection.RIGHT) == direction) {
 			System.out.println("Right");
 			turnRight();
 		} else {
-			applyBrake();
+			applyBrake();	// if direction is null
 		}
 	}
 
