@@ -62,14 +62,6 @@ public class ExploreController extends CarController {
 		}
 	}
 
-	private boolean isViewExplored(Map<Coordinate, MapTile> view) {
-		for (Entry<Coordinate, MapTile> entry : view.entrySet()) {
-			if (!entry.getValue().isType(Type.EMPTY) && !isRoadExplored.get(entry.getKey()))
-				return false;
-		}
-		return true;
-	}
-
 	private Direction nextDirection(Map<Coordinate, MapTile> view) {
 		Coordinate carPos = new Coordinate(getPosition());
 		List<Coordinate> possibleOut = new ArrayList<>();
@@ -124,45 +116,8 @@ public class ExploreController extends CarController {
 				return entry.getValue();
 			}
 		}
-		return null;
-
-//		Direction nextDirection = null;
-//		int northCount = 0, eastCount = 0, southCount = 0, westCount = 0, max = 0;
-//		for (Entry<Coordinate, Direction> entry : candidates.entrySet()) {
-//			switch (entry.getValue()) {
-//			case NORTH:
-//				northCount++;
-//				if (northCount > max) {
-//					max = northCount;
-//					nextDirection = Direction.NORTH;
-//				}
-//				break;
-//			case EAST:
-//				eastCount++;
-//				if (eastCount > max) {
-//					max = eastCount;
-//					nextDirection = Direction.EAST;
-//				}
-//				break;
-//			case SOUTH:
-//				southCount++;
-//				if (southCount > max) {
-//					max = southCount;
-//					nextDirection = Direction.SOUTH;
-//				}
-//				break;
-//			case WEST:
-//				westCount++;
-//				if (westCount > max) {
-//					max = westCount;
-//					nextDirection = Direction.WEST;
-//				}
-//				break;
-//			default:
-//				break;
-//			}
-//		}
-//		return nextDirection;
+		return null;	// should't happen
+		
 
 	}
 
@@ -231,7 +186,7 @@ public class ExploreController extends CarController {
 		} else if (deltaY < 0) {
 			return Direction.SOUTH;
 		}
-		return null;
+		return null;	// should't happen
 	}
 	
 	private List<Coordinate> getNeighbour(Coordinate v, Map<Coordinate, MapTile> view) {
@@ -351,6 +306,8 @@ public class ExploreController extends CarController {
 		} else if (WorldSpatial.changeDirection(getOrientation(), RelativeDirection.RIGHT) == d) {
 			System.out.println("Right");
 			turnRight();
+		} else {
+			applyBrake();
 		}
 	}
 
