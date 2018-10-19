@@ -24,10 +24,16 @@ public class Mapping {
 	private HashMap<Coordinate, MapTile> pointsOfInterest;
 	private ArrayList<Coordinate> deadEnds;
 	
-	public Mapping() {
+	private static Mapping mapping = new Mapping();
+	
+	private Mapping() {
 		keys = new HashMap<>();
 		pointsOfInterest = new HashMap<>();
 		deadEnds = new ArrayList<>();
+	}
+	
+	public static Mapping getInstance() {
+		return mapping;
 	}
 	
 	// Returns keys that have been seen by player
