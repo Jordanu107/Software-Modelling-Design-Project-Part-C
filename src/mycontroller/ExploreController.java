@@ -8,9 +8,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
-import java.util.Stack;
-
 import controller.CarController;
 import tiles.MapTile;
 import tiles.MapTile.Type;
@@ -26,7 +23,7 @@ public class ExploreController extends CarController {
 
 	private Map<Coordinate, Boolean> isRoadExplored; // Temporary
 
-	private int wallSensitivity = 1;
+	private List<Coordinate> path;
 
 	private enum MoveStatus {
 		STOP, FORWARD, BACKWARD
@@ -42,6 +39,7 @@ public class ExploreController extends CarController {
 			if (entry.getValue().isType(Type.ROAD) || entry.getValue().isType(Type.START) || entry.getValue().isType(Type.FINISH))
 				isRoadExplored.put(entry.getKey(), false);
 		}
+		path = new ArrayList<>();
 		moveStatus = MoveStatus.STOP;
 	}
 
@@ -49,8 +47,8 @@ public class ExploreController extends CarController {
 	public void update() {
 		Map<Coordinate, MapTile> view = getView();
 		recordView(view);
-		Direction d = nextDirection(view);
-		moveIn(d);
+		Direction d = nextExploreDirection(view);
+		moveInDirection(d);
 	}
 
 	private void recordView(Map<Coordinate, MapTile> view) {
@@ -62,11 +60,11 @@ public class ExploreController extends CarController {
 		}
 	}
 
-	private Direction nextDirection(Map<Coordinate, MapTile> view) {
+	private Direction nextExploreDirection(Map<Coordinate, MapTile> view) {
 		Coordinate carPos = new Coordinate(getPosition());
 		List<Coordinate> possibleOut = new ArrayList<>();
 		
-		/* record tiles on edges of the 9*9 view that are not walls, which means possible move directions */
+		/* record tiles on edges of 9*9 view that are not walls, which means possible move directions */
 		for (int x = carPos.x - getViewSquare(); x <= carPos.x + getViewSquare(); x++) {
 			int y = carPos.y + getViewSquare();
 			Coordinate c = new Coordinate(x, y);
@@ -99,9 +97,10 @@ public class ExploreController extends CarController {
 				possibleOut.add(c);
 			}
 		}
-		Map<Coordinate, Direction> candidates = nextMoveDirections(carPos, possibleOut, view);
+		
+		Map<Coordinate, Coordinate> candidates = nextExploreCoors(carPos, possibleOut, view);
 
-		for (Entry<Coordinate, Direction> entry : candidates.entrySet()) {
+		for (Entry<Coordinate, Coordinate> entry : candidates.entrySet()) {
 			Coordinate adjacent = null;
 			int outX = entry.getKey().x;
 			int outY = entry.getKey().y;
@@ -115,22 +114,22 @@ public class ExploreController extends CarController {
 				adjacent = new Coordinate(outX, outY - 1);
 			}
 			if (!map.get(adjacent).isType(Type.WALL) && !isRoadExplored.get(adjacent)) {
-				return entry.getValue();
+				return coordinateToDirection(carPos, entry.getValue());
 			}
 		}
-		// if tiles around the view are all explored, go to an unconnected unvisited tile.
+		//TODO: if tiles around the view are all explored, back trace the path until see an unexplored tile
 		
 		return null;	// should't happen
 	}
 
-	private Map<Coordinate, Direction> nextMoveDirections(Coordinate car, List<Coordinate> outs,
+	private Map<Coordinate, Coordinate> nextExploreCoors(Coordinate car, List<Coordinate> outs,
 			Map<Coordinate, MapTile> view) {
 		Map<Coordinate, Boolean> visited = new HashMap<>();
 		for (Coordinate key : view.keySet()) {
 			visited.put(key, false);
 		}
-		Map<Coordinate, Direction> feasibleMove = new HashMap<>();
-		Map<Coordinate, Direction> availableNextMove = availableNextCoor(view);
+		Map<Coordinate, Coordinate> nextExploreCoors = new HashMap<>();
+		List<Coordinate> availableNextMove = availableNextCoors(view);
 		LinkedList<Coordinate> queue = new LinkedList<>();
 		Map<Coordinate, Coordinate> parent = new HashMap<>();
 		
@@ -141,11 +140,10 @@ public class ExploreController extends CarController {
 			Coordinate v = queue.poll();
 			if (outs.contains(v)) {
 				List<Coordinate> path = backtrace(parent, car, v);
-				Direction firstMove = coordinateToDirection(car, path.get(1));
-				feasibleMove.put(v, firstMove);
+				nextExploreCoors.put(v, path.get(1));
 			}
 			if (v == car) {
-				for (Coordinate w : availableNextMove.keySet()) {
+				for (Coordinate w : availableNextMove) {
 					if (!visited.get(w)) {
 						queue.add(w);
 						visited.put(w, true);
@@ -162,35 +160,37 @@ public class ExploreController extends CarController {
 				}
 			}
 		}
-		return feasibleMove;
+		return nextExploreCoors;
 		
 	}
 
-	private List<Coordinate> backtrace(Map<Coordinate, Coordinate> parent, Coordinate start, Coordinate end) {
-		List<Coordinate> path = new ArrayList<>();
-		path.add(end);
-		while(path.get(path.size()-1) != start) {
-			path.add(parent.get(path.get(path.size()-1)));
-		}
-		Collections.reverse(path);
-		return path;
+	private List<Coordinate> availableNextCoors(Map<Coordinate, MapTile> view) {
+		List<Coordinate> coordinates = new ArrayList<>();
+		Coordinate carPos = new Coordinate(getPosition());
+
+		/* check NORTH */
+		Coordinate northCoordinate = new Coordinate(carPos.x, carPos.y + 1);
+		if (!view.get(northCoordinate).isType(Type.WALL) && isFeasible(Direction.NORTH))
+			coordinates.add(northCoordinate);
+
+		/* check EAST */
+		Coordinate eastCoordinate = new Coordinate(carPos.x + 1, carPos.y);
+		if (!view.get(eastCoordinate).isType(Type.WALL) && isFeasible(Direction.EAST))
+			coordinates.add(eastCoordinate);
+
+		/* check SOUTH */
+		Coordinate southCoordinate = new Coordinate(carPos.x, carPos.y - 1);
+		if (!view.get(southCoordinate).isType(Type.WALL) && isFeasible(Direction.SOUTH))
+			coordinates.add(southCoordinate);
+
+		/* check WEST */
+		Coordinate westCoordinate = new Coordinate(carPos.x - 1, carPos.y);
+		if (!view.get(westCoordinate).isType(Type.WALL) && isFeasible(Direction.WEST))
+			coordinates.add(westCoordinate);
+
+		return coordinates;
 	}
-	
-	private Direction coordinateToDirection(Coordinate start, Coordinate end) {
-		int deltaX = end.x - start.x;
-		int deltaY = end.y - start.y;
-		if (deltaX > 0) {
-			return Direction.EAST;
-		} else if (deltaX < 0) {
-			return Direction.WEST;
-		} else if (deltaY > 0) {
-			return Direction.NORTH;
-		} else if (deltaY < 0) {
-			return Direction.SOUTH;
-		}
-		return null;	// should't happen
-	}
-	
+
 	private List<Coordinate> getNeighbour(Coordinate v, Map<Coordinate, MapTile> view) {
 		List<Coordinate> neighbours = new ArrayList<>();
 		Coordinate carPos = new Coordinate(getPosition());
@@ -213,77 +213,14 @@ public class ExploreController extends CarController {
 		return neighbours;
 	}
 
-	private Map<Coordinate, Direction> availableNextCoor(Map<Coordinate, MapTile> view) {
-		List<Direction> directions = availableDirections(view);
-		Map<Coordinate, Direction> nextCoors = new HashMap<>();
-		Coordinate car = new Coordinate(getPosition());
-		for (Direction d : directions) {
-			switch (d) {
-			case NORTH:
-				nextCoors.put(new Coordinate(car.x, car.y + 1), Direction.NORTH);
-				break;
-			case EAST:
-				nextCoors.put(new Coordinate(car.x + 1, car.y), Direction.EAST);
-				break;
-			case SOUTH:
-				nextCoors.put(new Coordinate(car.x, car.y - 1), Direction.SOUTH);
-				break;
-			case WEST:
-				nextCoors.put(new Coordinate(car.x - 1, car.y), Direction.WEST);
-				break;
-			default:
-				break;
-			}
+	private List<Coordinate> backtrace(Map<Coordinate, Coordinate> parent, Coordinate start, Coordinate end) {
+		List<Coordinate> path = new ArrayList<>();
+		path.add(end);
+		while(path.get(path.size()-1) != start) {
+			path.add(parent.get(path.get(path.size()-1)));
 		}
-		return nextCoors;
-	}
-
-	private List<Direction> availableDirections(Map<Coordinate, MapTile> view) {
-		List<Direction> directions = new ArrayList<>();
-		Coordinate carPos = new Coordinate(getPosition());
-		boolean available;
-
-		/* check if NORTH is feasible */
-		available = true;
-		for (int d = 1; d <= wallSensitivity; d++) {
-			if (view.get(new Coordinate(carPos.x, carPos.y + d)).isType(Type.WALL)) {
-				available = false;
-			}
-		}
-		if (available && isFeasible(Direction.NORTH))
-			directions.add(Direction.NORTH);
-
-		/* check if EAST is feasible */
-		available = true;
-		for (int d = 1; d <= wallSensitivity; d++) {
-			if (view.get(new Coordinate(carPos.x + d, carPos.y)).isType(Type.WALL)) {
-				available = false;
-			}
-		}
-		if (available && isFeasible(Direction.EAST))
-			directions.add(Direction.EAST);
-
-		/* check if SOUTH is feasible */
-		available = true;
-		for (int d = 1; d <= wallSensitivity; d++) {
-			if (view.get(new Coordinate(carPos.x, carPos.y - d)).isType(Type.WALL)) {
-				available = false;
-			}
-		}
-		if (available && isFeasible(Direction.SOUTH))
-			directions.add(Direction.SOUTH);
-
-		/* check if WEST is feasible */
-		available = true;
-		for (int d = 1; d <= wallSensitivity; d++) {
-			if (view.get(new Coordinate(carPos.x - d, carPos.y)).isType(Type.WALL)) {
-				available = false;
-			}
-		}
-		if (available && isFeasible(Direction.WEST))
-			directions.add(Direction.WEST);
-
-		return directions;
+		Collections.reverse(path);
+		return path;
 	}
 
 	private boolean isFeasible(Direction d) {
@@ -294,7 +231,7 @@ public class ExploreController extends CarController {
 		return true;
 	}
 
-	private void moveIn(Direction direction) {
+	private void moveInDirection(Direction direction) {
 		System.out.println("Go " + direction);
 		if (getOrientation() == direction) {
 			System.out.println("Forward");
@@ -332,4 +269,38 @@ public class ExploreController extends CarController {
 			moveStatus = MoveStatus.BACKWARD;
 		}
 	}
+	
+	/* -------- util ----------- */
+	
+	private Direction coordinateToDirection(Coordinate start, Coordinate end) {
+		int deltaX = end.x - start.x;
+		int deltaY = end.y - start.y;
+		if (deltaX > 0) {
+			return Direction.EAST;
+		} else if (deltaX < 0) {
+			return Direction.WEST;
+		} else if (deltaY > 0) {
+			return Direction.NORTH;
+		} else if (deltaY < 0) {
+			return Direction.SOUTH;
+		}
+		return null;	// should't happen
+	}
+
+	private Coordinate directionToCoordinate(Direction d) {
+		Coordinate car = new Coordinate(getPosition());
+		switch (d) {
+		case NORTH:
+			return new Coordinate(car.x, car.y + 1);
+		case EAST:
+			return new Coordinate(car.x + 1, car.y);
+		case SOUTH:
+			return new Coordinate(car.x, car.y - 1);
+		case WEST:
+			return new Coordinate(car.x - 1, car.y);
+		default:
+			return null;
+		}
+	}
+	
 }
