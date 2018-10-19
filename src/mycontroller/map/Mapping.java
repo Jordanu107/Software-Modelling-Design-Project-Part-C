@@ -2,13 +2,10 @@ package mycontroller.map;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import tiles.LavaTrap;
 import tiles.MapTile;
-import tiles.MapTile.Type;
-import tiles.MudTrap;
 import tiles.TrapTile;
 import utilities.Coordinate;
 
@@ -20,11 +17,17 @@ import utilities.Coordinate;
  */
 
 public class Mapping {
+	private static Mapping instance;
+	public static Mapping getMap() {
+		if (Mapping.instance == null) {
+			Mapping.instance = new Mapping();
+		}
+		
+		return Mapping.instance;
+	}
 	
-	public static Mapping map;
-	
-	public HashMap<Coordinate, Integer> keys;
-	public HashMap<Coordinate, MapTile> pointsOfInterest;
+	private HashMap<Coordinate, Integer> keys;
+	private HashMap<Coordinate, MapTile> pointsOfInterest;
 	private ArrayList<Coordinate> deadEnds;
 	
 	public Mapping() {
