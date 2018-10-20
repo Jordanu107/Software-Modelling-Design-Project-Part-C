@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.Stack;
 
 import controller.CarController;
+import mycontroller.navigation.Navigator;
 import mycontroller.navigation.Path;
 import mycontroller.navigation.Pathfinding;
 import tiles.GrassTrap;
@@ -41,9 +41,11 @@ public class ExploreController extends CarController {
 
 	private boolean isBacktracing;
 
-	private int specialCount;
+	private Path helpPath;
 
-	private Direction backtracingStartMove;
+	private Navigator navigator;
+	
+	private List<Coordinate> recordPath;
 
 	public ExploreController(Car car) {
 		super(car);
@@ -57,24 +59,78 @@ public class ExploreController extends CarController {
 		path = new ArrayList<>();
 		moveStatus = MoveStatus.STOP;
 		isBacktracing = false;
-		specialCount = 2;
-		backtracingStartMove = null;
+		helpPath = null;
+		navigator = new Navigator(this, null);
+		recordPath = new ArrayList<>();
 	}
 
 	@Override
 	public void update() {
 		Map<Coordinate, MapTile> view = getView();
 		recordView(view);
-		boolean allExplored = true;
-		for (Entry<Coordinate, Boolean> entry : isRoadExplored.entrySet()) {
-			if (!entry.getValue())
-//				System.out.println(entry);
-				allExplored = false;
+		if (navigator.isNavigating()) {
+			navigator.update();
+			System.out.println("Car Position: " + getPosition());
+			System.out.println(helpPath.path);
+			return;
 		}
-		Direction d = nextExploreDirection(view);
-		moveInDirection(d);
-		if (allExplored)
-			System.out.println("all explored");
+		if (isStuck()) {
+			System.out.println("-----------Stuck!-------------");
+			if (moveStatus == MoveStatus.FORWARD) {
+				moveBackward();
+			} else if (moveStatus == MoveStatus.BACKWARD) {
+				moveForward();
+			}
+			helpPath = buildHelpPath();
+			if (helpPath != null) {
+				navigator = new Navigator(this, helpPath);
+			} else {
+				System.out.println("Finished exploring!");
+			}
+			return;
+		}
+		MoveEntry moveEntry = nextExploreDirection(view);
+		moveInDirection(moveEntry.direction);
+		if (recordPath.size() <= 10) {
+			recordPath.add(moveEntry.coordinate);
+		} else {
+			recordPath.remove(0);
+			recordPath.add(moveEntry.coordinate);
+		}
+		
+	}
+
+	private boolean isStuck() {
+		if (recordPath.size() < 10)
+			return false;
+		Set<Coordinate> recordSet = new HashSet<>(recordPath);
+		return recordSet.size() <= 2;
+	}
+
+	private Path buildHelpPath() {
+		Path path = null;
+		for (Entry<Coordinate, Boolean> isExplored : isRoadExplored.entrySet()) {
+			if (!isExplored.getValue() && isNeighbourExplored(isExplored.getKey())) {
+				path = Pathfinding.linkPoints(this, isExplored.getKey());
+				if (path != null)
+					return path;
+			}
+		}
+		return null;
+	}
+
+	private boolean isNeighbourExplored(Coordinate point) {
+		List<Coordinate> neighbours = new ArrayList<>();
+		neighbours.add(new Coordinate(point.x + 1, point.y));
+		neighbours.add(new Coordinate(point.x - 1, point.y));
+		neighbours.add(new Coordinate(point.x, point.y + 1));
+		neighbours.add(new Coordinate(point.x, point.y - 1));
+		for (Coordinate neighbour : neighbours) {
+			if (isRoadExplored.containsKey(neighbour) && isRoadExplored.get(neighbour)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void recordView(Map<Coordinate, MapTile> view) {
@@ -87,7 +143,7 @@ public class ExploreController extends CarController {
 		}
 	}
 
-	private Direction nextExploreDirection(Map<Coordinate, MapTile> view) {
+	private MoveEntry nextExploreDirection(Map<Coordinate, MapTile> view) {
 		Coordinate carPos = new Coordinate(getPosition());
 		List<Coordinate> possibleOut = new ArrayList<>();
 
@@ -158,7 +214,7 @@ public class ExploreController extends CarController {
 		}
 		if (!nextMoves.isEmpty()) {
 
-			/* always go the most right direction at cross */
+			/* always go the most right direction at branches */
 			Direction carFace = getOrientation();
 			Direction right = WorldSpatial.changeDirection(carFace, RelativeDirection.RIGHT);
 			Direction left = WorldSpatial.changeDirection(carFace, RelativeDirection.LEFT);
@@ -182,7 +238,8 @@ public class ExploreController extends CarController {
 			removeDuplicatePath();
 			System.out.println(nextMoves.get(next) + " added to path.");
 			System.out.println(path);
-			return next;
+			System.out.println("Car position: " + carPos);
+			return new MoveEntry(next, nextMoves.get(next));
 		}
 
 		/*
@@ -202,9 +259,19 @@ public class ExploreController extends CarController {
 		System.out.println("Backtrace: " + previousCoor);
 		System.out.println("Car position: " + carPos);
 
-		return coordinateToDirection(carPos, previousCoor);
+		return new MoveEntry(coordinateToDirection(carPos, previousCoor), previousCoor);
 	}
 
+	private class MoveEntry {
+		public Direction direction;
+		public Coordinate coordinate;
+		
+		public MoveEntry(Direction direction, Coordinate coordinate){
+			this.direction = direction;
+			this.coordinate = coordinate;
+		}
+	}
+	
 	private void removeDuplicatePath() {
 		Map<Coordinate, Integer> count = new HashMap<>();
 		for (Coordinate point : path) {

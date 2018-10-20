@@ -8,6 +8,7 @@ import tiles.LavaTrap;
 import tiles.MapTile;
 import tiles.TrapTile;
 import utilities.Coordinate;
+import world.World;
 
 /**
  * Mapping expresses the current state of the map that has been explored,
@@ -42,7 +43,8 @@ public class Mapping {
 	}
 	
 	public HashMap<Coordinate, MapTile> getPointsOfInterest() {
-		return pointsOfInterest;
+		//return pointsOfInterest;
+		return World.mapTiles;
 	}
 	
 	public ArrayList<Coordinate> getDeadEnds() {
