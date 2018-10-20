@@ -1,8 +1,10 @@
 package mycontroller.navigation;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 import controller.CarController;
@@ -93,7 +95,7 @@ public class Pathfinding {
 	
 	/**
 	 * Returns a Path that takes car to finish, minimizing health damage.
-	 * Use a modified version of Dijkstra's Algorithm.
+	 * Use a modified version of A*.
 	 * @param start
 	 * @param finish
 	 * @param car
@@ -131,11 +133,12 @@ public class Pathfinding {
 			// get best unvisited 
 			current = (Coordinate) unvisited.toArray()[0];
 			float bestHealth = carMap.get(current).health, tmpHealth;
-			int bestDistance = pathMap.get(current).getLength(), tmpDistance;
+			int bestDistance = pathMap.get(current).getLength() + distance(current, finish);
+			int tmpDistance;
 			for (Coordinate option : unvisited) {
 				// priority is health, then distance
 				tmpHealth = carMap.get(option).health;
-				tmpDistance = pathMap.get(option).getLength();
+				tmpDistance = pathMap.get(option).getLength() + distance(current, finish);
 				if (tmpHealth > bestHealth) {
 					current = option;
 					bestHealth = tmpHealth;
@@ -179,19 +182,19 @@ public class Pathfinding {
 						unvisited.add(pos);
 						pathMap.put(pos, newPath);
 						carMap.put(pos, newCar);
-					} else if (carMap.get(pos).health < newCar.health) {
+					} else if (newCar.health > carMap.get(pos).health) {
 						// visited, but higher health!
 						unvisited.add(pos);
 						pathMap.put(pos, newPath);
 						carMap.put(pos, newCar);
-					} else if (pathMap.get(pos).getLength() > newPath.getLength()) {
+					} else if ((int) newCar.health == (int) carMap.get(pos).health && newPath.getLength() < pathMap.get(pos).getLength()) {
 						unvisited.add(pos);
 						pathMap.put(pos, newPath);
 						carMap.put(pos, newCar);
-					} else if (canRepeat(currentCar, pos, currentPath)) {
-						unvisited.add(pos);
-						pathMap.put(pos, newPath);
-						carMap.put(pos, newCar);
+					//} else if (canRepeat(currentCar, pos, currentPath)) {
+					//	unvisited.add(pos);
+					//	pathMap.put(pos, newPath);
+					//	carMap.put(pos, newCar);
 					}
 				}
 			}
@@ -225,10 +228,11 @@ public class Pathfinding {
 	private static boolean canMove (PseudoCar car, Coordinate destination) {
 		Coordinate start = car.position;
 		
-		// would this even be a valid move
-		if (start != destination && (Math.abs(start.x - destination.x) + Math.abs(start.y - destination.y)) != 1) {
+		// would this even be a valid, single-space move
+		if (!(start == destination || (Math.abs(start.x - destination.x) + Math.abs(start.y - destination.y)) == 1)) {
 			return false;
 		}
+		
 		// check if can't reach destination because car is stationary
 		Direction dir = Path.fromToDirection(car.position, destination);
 		if (!car.isMoving && (
@@ -305,9 +309,21 @@ public class Pathfinding {
 	
 	
 	
+	
 	/************************************
 	 * PRIVATE METHODS FOR INTERNAL USE *
 	 ************************************/
+	
+	/**
+	 * Returns distance between two coordinates (not including diagonal movement)
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private static int distance(Coordinate a, Coordinate b) {
+		return Math.abs(a.x-b.x) + Math.abs(a.y-b.y);
+	}
+	
 	
 	/**
 	 * Updates the state of a car, as if it had followed the given path.
