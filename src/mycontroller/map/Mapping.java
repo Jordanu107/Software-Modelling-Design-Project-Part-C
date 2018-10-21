@@ -2,14 +2,16 @@ package mycontroller.map;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 import tiles.LavaTrap;
 import tiles.MapTile;
+import tiles.TrapTile;
 import tiles.MapTile.Type;
-import tiles.MudTrap;
 import utilities.Coordinate;
+import world.World;
 
 /**
  * Mapping expresses the current state of the map that has been explored,
@@ -19,62 +21,108 @@ import utilities.Coordinate;
  */
 
 public class Mapping {
-	private HashMap<Coordinate, Integer> keys;
-	private HashMap<Coordinate, String> pointsOfInterest;
-	
-	public Mapping() {
-		keys = new HashMap<>();
-		pointsOfInterest = new HashMap<>();
+	private static Mapping instance;
+	public static Mapping getMap() {
+		if (Mapping.instance == null) {
+			Mapping.instance = new Mapping();
+		}
+		
+		return Mapping.instance;
 	}
 	
+	private HashMap<Coordinate, Integer> keys;
+	private HashMap<Coordinate, MapTile> mapTiles;
+	private ArrayList<Coordinate> deadEnds;
+	private Map<Coordinate, Boolean> isRoadExplored;
+	
+	public Map<Coordinate, Boolean> getIsRoadExplored() {
+		return isRoadExplored;
+	}
+
+	public Mapping() {
+		keys = new HashMap<>();
+		mapTiles = new HashMap<>();
+		deadEnds = new ArrayList<>();
+		isRoadExplored = new HashMap<>();
+	}
+	
+	public void initialize(HashMap<Coordinate, MapTile> map) {
+		this.mapTiles = map;
+		for (Entry<Coordinate, MapTile> entry : map.entrySet()) {
+			if (!entry.getValue().isType(Type.WALL) && !entry.getValue().isType(Type.EMPTY))
+				isRoadExplored.put(entry.getKey(), false);
+		}
+	}
+	
+	public boolean containsCoordinate(Coordinate coordinate) {
+		return mapTiles.containsKey(coordinate);
+	}
+	
+	// Returns keys that have been seen by player
 	public HashMap<Coordinate, Integer> getKeysSeen() {
 		return keys;
 	}
 	
-	public HashMap<Coordinate, String> getPointsOfInterest() {
-		return pointsOfInterest;
+	public HashMap<Coordinate, MapTile> getMapTiles() {
+		return mapTiles;
 	}
 	
-	public void addFoundKey(Coordinate coordinate, Integer value) {
-		keys.put(coordinate, value);
+	public ArrayList<Coordinate> getDeadEnds() {
+		return deadEnds;
 	}
 	
-	public void addPointOfInterest(Coordinate coordinate, String type) {
-		pointsOfInterest.put(coordinate, type);
+	public MapTile getTile(Coordinate coordinate) {
+		// Check if there is a trap and which type of trap it is
+		for (Map.Entry<Coordinate, MapTile> mapInfo : mapTiles.entrySet()) {
+			if (mapInfo.getKey().equals(coordinate)) {
+				return mapInfo.getValue();
+			}
+		}
+		
+		// Check whether the type of mapTile at the point is a wall
+		for (Coordinate deadEnd : deadEnds) {
+			if (coordinate.equals(deadEnd)) {
+				return new MapTile(MapTile.Type.WALL);
+			}
+		}
+		return null;
 	}
 	
-	public void articulateViewPoint(HashMap<Coordinate, MapTile> currentView) {
+	public void addMapTile(Coordinate coordinate, MapTile mapTile) {
+		mapTiles.put(coordinate, mapTile);
+	}
+	
+	public boolean isExplored(Coordinate coordinate) {
+		return isRoadExplored.get(coordinate);
+	}
+	
+	public void articulateViewPoint(Map<Coordinate, MapTile> currentView) {
+		
 		// Iterate through all the tiles that the car can currently see
         for (Map.Entry<Coordinate, MapTile> mapInfo : currentView.entrySet()) {
-        		Coordinate coordinate = mapInfo.getKey();
-        		String type = mapInfo.getValue().getType().toString();
-			
-        		// Check every lava tile for any keys within the tile
-        		if (mapInfo.getValue() instanceof LavaTrap) {
-				LavaTrap lavaTrap = (LavaTrap) mapInfo.getValue();
-				
-				// A key exists within the lava
-				if (lavaTrap.getKey() > 0 && !keys.containsKey(mapInfo.getKey())) {
-					keys.put(mapInfo.getKey(), lavaTrap.getKey());
-				}
-			}
+        	Coordinate coordinate = mapInfo.getKey();
+        	MapTile mapTile = mapInfo.getValue();
+        	
+        	// Only record the road and traps and avoid duplicate recording
+        	if (mapTile.isType(Type.EMPTY) || mapTile.isType(Type.WALL) || isRoadExplored.get(coordinate))
+        		continue;
+        	// Check if the tile being inspected is a lava trap
+        	if (mapTile instanceof LavaTrap) {
+        		LavaTrap lavaTrap = (LavaTrap) mapTile;
+        		int key = lavaTrap.getKey();
         		
-        		// Found a Mud Trap i.e. game over when traversed over
-        		if (mapInfo.getValue() instanceof MudTrap && !pointsOfInterest.containsKey(coordinate)) {
-        			addPointOfInterest(coordinate, type);
+        		// A key exists within the lava
+        		if (key > 0) {	// can have duplicated keys
+        			keys.put(coordinate, key);
         		}
+        	}
+        	addMapTile(coordinate, mapTile);
+        	isRoadExplored.put(coordinate, true);
+        	
+        	// In case the map tile is a dead end
+        	if (mapTile.getType().toString().equals("WALL")) {
+        		deadEnds.add(coordinate);
+        	}
 		}
-        
-        // Print location and key #
-        for (Map.Entry<Coordinate, Integer> key : keys.entrySet()) {
-        		System.out.println("The key " + key.getValue() + " is at " + key.getKey());
-        }
-        System.out.println("---------------All Keys Processed---------------");
-        
-        // Print location of dead ends
-        for (Map.Entry<Coordinate, String> point : pointsOfInterest.entrySet()) {
-        		System.out.println("The coordinate " + point.getKey() + " is the tile of " + point.getValue() + " !");
-        }
-        System.out.println("---------------All Dead Ends Processed---------------");
 	}
 }

@@ -1,6 +1,7 @@
 package mycontroller.navigation;
 
 import controller.CarController;
+import mycontroller.MyAIController;
 import world.WorldSpatial;
 import world.WorldSpatial.Direction;
 import world.WorldSpatial.RelativeDirection;
@@ -21,18 +22,23 @@ public class Navigator {
 	// runtime parameters
 	private int currentStep;
 	
+	private enum MoveStatus {
+		STOP, FORWARD, BACKWARD
+	}
+
+	private MoveStatus moveStatus;
 	
 	public Navigator(CarController car, Path path) {
 		this.car = car;
 		this.path = path;
-		
+		moveStatus = MoveStatus.STOP;
 		currentStep = 0;
 	}
 	
 	
 	public void update() {
-		// if we are done, no need to move
-		if (currentStep >= path.getLength() - 1) {
+		System.out.println(currentStep + ": " + path.getStep(currentStep));
+		if (!isNavigating()) {
 			car.applyBrake();
 			return;
 		}
@@ -49,22 +55,27 @@ public class Navigator {
 		}
 		// check for reverse
 		else if (WorldSpatial.reverseDirection(car.getOrientation()) == direction) {
-			if (car.getSpeed() > 0) {
-				// gotta brake and continue next step
-				car.applyBrake();
-				repeatStep = true;
-			} else {
-				car.applyReverseAcceleration();
-			}
+//			if (car.getSpeed() > 0) {
+//				// gotta brake and continue next step
+//				car.applyBrake();
+//				repeatStep = true;
+//			} else {
+//				car.applyReverseAcceleration();
+//			}
+			moveBackward();
 		}
 		else if (car.getOrientation() == direction) {
-			if (car.getSpeed() < 0) {
-				// gotta brake and continue next step
-				car.applyBrake();
-				repeatStep = true;
-			} else {
-				car.applyForwardAcceleration();
-			}
+//			if (car.getSpeed() < 0) {
+//				// gotta brake and continue next step
+//				car.applyBrake();
+//				repeatStep = true;
+//			} else {
+//				car.applyForwardAcceleration();
+//			}
+			moveForward();
+		} else if (null == direction){
+			// the car remains stationary
+			car.applyBrake();
 		}
 		
 		
@@ -73,8 +84,28 @@ public class Navigator {
 		}
 	}
 	
+	private void moveForward() {
+		if (moveStatus == MoveStatus.BACKWARD) {
+			car.applyBrake();
+			moveStatus = MoveStatus.STOP;
+		} else if (moveStatus != MoveStatus.BACKWARD && car.getSpeed() < MyAIController.CAR_MAX_SPEED) {
+			car.applyForwardAcceleration();
+			moveStatus = MoveStatus.FORWARD;
+		}
+	}
+
+	private void moveBackward() {
+		if (moveStatus == MoveStatus.FORWARD) {
+			car.applyBrake();
+			moveStatus = MoveStatus.STOP;
+		} else if (moveStatus != MoveStatus.FORWARD && car.getSpeed() < MyAIController.CAR_MAX_SPEED) {
+			car.applyReverseAcceleration();
+			moveStatus = MoveStatus.BACKWARD;
+		}
+	}
+	
 	public boolean isNavigating() {
-		return currentStep < path.getLength();
+		return path != null && currentStep < path.getLength()-1;
 	}
 	
 	
