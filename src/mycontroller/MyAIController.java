@@ -11,6 +11,10 @@ public class MyAIController extends CarController{
 	// Car Speed to move at
 	public static final int CAR_MAX_SPEED = 1;
 	
+	public enum MoveStatus {
+		STOP, FORWARD, BACKWARD
+	}
+	
 	public MyAIController(Car car) {
 		super(car);
 		exploreController = new ExploreController(car, this);

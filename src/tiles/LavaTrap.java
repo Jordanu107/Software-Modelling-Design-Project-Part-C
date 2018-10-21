@@ -9,7 +9,7 @@ public class LavaTrap extends TrapTile {
 	public String getTrap() { return "lava"; }
 
 	public void applyTo(Car car, float delta) {
-		//car.reduceHealth(HealthDelta * delta);
+		car.reduceHealth(HealthDelta * delta);
 		if (key>0) car.findKey(key);
 	}
 	

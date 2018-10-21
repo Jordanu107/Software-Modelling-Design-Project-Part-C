@@ -105,7 +105,7 @@ public class Pathfinding {
 			carControl.getHealth(),
 			carControl.getOrientation(),
 			new Coordinate(carControl.getPosition()),
-			carControl.getSpeed() != 0
+			false	// because the car is always at STOP status before PathFinding
 		);
 		
 		return linkPoints(car, finish);

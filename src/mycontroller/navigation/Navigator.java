@@ -2,6 +2,7 @@ package mycontroller.navigation;
 
 import controller.CarController;
 import mycontroller.MyAIController;
+import mycontroller.MyAIController.MoveStatus;
 import world.WorldSpatial;
 import world.WorldSpatial.Direction;
 import world.WorldSpatial.RelativeDirection;
@@ -21,10 +22,6 @@ public class Navigator {
 	
 	// runtime parameters
 	private int currentStep;
-	
-	private enum MoveStatus {
-		STOP, FORWARD, BACKWARD
-	}
 
 	private MoveStatus moveStatus;
 	
@@ -36,11 +33,15 @@ public class Navigator {
 	}
 	
 	
-	public void update() {
+	public MoveStatus update() {
 		System.out.println(currentStep + ": " + path.getStep(currentStep));
 		if (!isNavigating()) {
-			car.applyBrake();
-			return;
+			if (moveStatus == MoveStatus.FORWARD) {
+				moveBackward();
+			} else if (moveStatus == MoveStatus.BACKWARD) {
+				moveForward();
+			}
+			return moveStatus;
 		}
 
 		Direction direction = path.getDirectionAtStep(currentStep);
@@ -82,6 +83,7 @@ public class Navigator {
 		if (!repeatStep) {
 			currentStep++;
 		}
+		return moveStatus;
 	}
 	
 	private void moveForward() {
