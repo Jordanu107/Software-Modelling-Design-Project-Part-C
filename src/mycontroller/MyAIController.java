@@ -13,7 +13,7 @@ public class MyAIController extends CarController{
 	
 	public MyAIController(Car car) {
 		super(car);
-		exploreController = new ExploreController(car);
+		exploreController = new ExploreController(car, this);
 
 	}
 

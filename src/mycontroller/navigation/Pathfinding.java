@@ -242,7 +242,7 @@ public class Pathfinding {
 		}
 		
 		
-		HashMap<Coordinate, MapTile> map = Mapping.getMap().getPointsOfInterest();
+		HashMap<Coordinate, MapTile> map = Mapping.getMap().getMapTiles();
 		
 		// check that we know about the start and destination
 		if (!(map.containsKey(start) && map.containsKey(destination))) {
@@ -338,7 +338,7 @@ public class Pathfinding {
 		car = new PseudoCar(car);
 		
 		// update health
-		MapTile tile = Mapping.getMap().getTypeByCoordinate(destination);
+		MapTile tile = Mapping.getMap().getTile(destination);
 		if (tile instanceof LavaTrap) {
 			car.health -= LavaTrap.HealthDelta * 0.25; 
 		} else if (tile instanceof HealthTrap) {
@@ -367,7 +367,7 @@ public class Pathfinding {
 	 */
 	private static boolean canRepeat(PseudoCar car, Coordinate destination, Path path) {
 		// special case for grass traps
-		if (Mapping.getMap().getPointsOfInterest().get(destination) instanceof GrassTrap) {
+		if (Mapping.getMap().getMapTiles().get(destination) instanceof GrassTrap) {
 			// we permit re-entering grass IF AND ONLY IF the grass has not been entered from this direction before
 			Direction dir = Path.fromToDirection(car.position, destination);
 			for (int i = 1; i < path.getLength(); i++) {

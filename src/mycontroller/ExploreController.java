@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import controller.CarController;
+import mycontroller.map.Mapping;
 import mycontroller.navigation.Navigator;
 import mycontroller.navigation.Path;
 import mycontroller.navigation.Pathfinding;
@@ -21,15 +22,18 @@ import tiles.MapTile.Type;
 import tiles.MudTrap;
 import utilities.Coordinate;
 import world.Car;
+import world.World;
 import world.WorldSpatial;
 import world.WorldSpatial.Direction;
 import world.WorldSpatial.RelativeDirection;
 
 public class ExploreController extends CarController {
 
-	private Map<Coordinate, MapTile> map; // Temporary
+//	private Map<Coordinate, MapTile> map;
+	
+	private Mapping mapping;
 
-	private Map<Coordinate, Boolean> isRoadExplored; // Temporary
+	private Map<Coordinate, Boolean> isRoadExplored;
 
 	private List<Coordinate> path;
 
@@ -46,16 +50,21 @@ public class ExploreController extends CarController {
 	private Navigator navigator;
 	
 	private List<Coordinate> recordPath;
+	
+	CarController myAIController;
 
-	public ExploreController(Car car) {
+	public ExploreController(Car car, CarController myAIController) {
 		super(car);
-		map = getMap();
+		this.myAIController = myAIController;
+		mapping = Mapping.getMap();
+		mapping.initialize(getMap());
+//		map = getMap();
+//		map = World.mapTiles;
 		isRoadExplored = new HashMap<>();
-		for (Entry<Coordinate, MapTile> entry : map.entrySet()) {
-			if (entry.getValue().isType(Type.ROAD) || entry.getValue().isType(Type.START)
-					|| entry.getValue().isType(Type.FINISH))
-				isRoadExplored.put(entry.getKey(), false);
-		}
+//		for (Entry<Coordinate, MapTile> entry : map.entrySet()) {
+//			if (!entry.getValue().isType(Type.WALL) && !entry.getValue().isType(Type.EMPTY))
+//				isRoadExplored.put(entry.getKey(), false);
+//		}
 		path = new ArrayList<>();
 		moveStatus = MoveStatus.STOP;
 		isBacktracing = false;
@@ -67,7 +76,8 @@ public class ExploreController extends CarController {
 	@Override
 	public void update() {
 		Map<Coordinate, MapTile> view = getView();
-		recordView(view);
+//		recordView(view);
+		mapping.articulateViewPoint(view);
 		if (navigator.isNavigating()) {
 			navigator.update();
 			System.out.println("Car Position: " + getPosition());
@@ -111,7 +121,7 @@ public class ExploreController extends CarController {
 		Path path = null;
 		for (Entry<Coordinate, Boolean> isExplored : isRoadExplored.entrySet()) {
 			if (!isExplored.getValue() && isNeighbourExplored(isExplored.getKey())) {
-				path = Pathfinding.linkPoints(this, isExplored.getKey());
+				path = Pathfinding.linkPoints(myAIController, isExplored.getKey());
 				if (path != null)
 					return path;
 			}
@@ -133,15 +143,15 @@ public class ExploreController extends CarController {
 		return false;
 	}
 
-	private void recordView(Map<Coordinate, MapTile> view) {
-		for (Entry<Coordinate, MapTile> entry : view.entrySet()) {
-			if (entry.getValue().isType(Type.TRAP) || entry.getValue().isType(Type.ROAD)
-					|| entry.getValue().isType(Type.START) || entry.getValue().isType(Type.FINISH)) {
-				map.put(entry.getKey(), entry.getValue());
-				isRoadExplored.put(entry.getKey(), true);
-			}
-		}
-	}
+//	private void recordView(Map<Coordinate, MapTile> view) {
+//		for (Entry<Coordinate, MapTile> entry : view.entrySet()) {
+//			if (entry.getValue().isType(Type.TRAP) || entry.getValue().isType(Type.ROAD)
+//					|| entry.getValue().isType(Type.START) || entry.getValue().isType(Type.FINISH)) {
+//				map.put(entry.getKey(), entry.getValue());
+//				isRoadExplored.put(entry.getKey(), true);
+//			}
+//		}
+//	}
 
 	private MoveEntry nextExploreDirection(Map<Coordinate, MapTile> view) {
 		Coordinate carPos = new Coordinate(getPosition());
@@ -203,7 +213,7 @@ public class ExploreController extends CarController {
 				adjacents.add(new Coordinate(outX, outY - 1));
 			}
 			for (Coordinate adj : adjacents) {
-				if (map.containsKey(adj) && !map.get(adj).isType(Type.WALL) && !isRoadExplored.get(adj)) { // adj is
+				if (mapping.containsCoordinate(adj) && !mapping.getTile(adj).isType(Type.WALL) && !mapping.isExplored(adj)) { // adj is
 																											// valid to
 																											// be
 																											// explored
