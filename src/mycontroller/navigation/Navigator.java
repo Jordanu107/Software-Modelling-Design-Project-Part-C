@@ -36,11 +36,8 @@ public class Navigator {
 	public MoveStatus update() {
 		System.out.println(currentStep + ": " + path.getStep(currentStep));
 		if (!isNavigating()) {
-			if (moveStatus == MoveStatus.FORWARD) {
-				moveBackward();
-			} else if (moveStatus == MoveStatus.BACKWARD) {
-				moveForward();
-			}
+			car.applyBrake();
+			moveStatus = MoveStatus.STOP;
 			return moveStatus;
 		}
 
@@ -56,27 +53,14 @@ public class Navigator {
 		}
 		// check for reverse
 		else if (WorldSpatial.reverseDirection(car.getOrientation()) == direction) {
-//			if (car.getSpeed() > 0) {
-//				// gotta brake and continue next step
-//				car.applyBrake();
-//				repeatStep = true;
-//			} else {
-//				car.applyReverseAcceleration();
-//			}
 			moveBackward();
 		}
 		else if (car.getOrientation() == direction) {
-//			if (car.getSpeed() < 0) {
-//				// gotta brake and continue next step
-//				car.applyBrake();
-//				repeatStep = true;
-//			} else {
-//				car.applyForwardAcceleration();
-//			}
 			moveForward();
 		} else if (null == direction){
 			// the car remains stationary
 			car.applyBrake();
+			moveStatus = MoveStatus.STOP;
 		}
 		
 		

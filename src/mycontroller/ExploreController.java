@@ -102,11 +102,11 @@ public class ExploreController extends CarController {
 	}
 
 	private void callPathFinding() {
-		if (moveStatus == MoveStatus.FORWARD) {
-			moveBackward();
-		} else if (moveStatus == MoveStatus.BACKWARD) {
-			moveForward();
-		}
+		
+		/* Brake the car first */
+		applyBrake();
+		moveStatus = MoveStatus.STOP;
+		
 		helpPath = buildHelpPath();
 		if (helpPath != null) {
 			System.out.println("Found an unvisted point!");
