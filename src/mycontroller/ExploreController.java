@@ -17,6 +17,7 @@ import mycontroller.navigation.Navigator;
 import mycontroller.navigation.Path;
 import mycontroller.navigation.Pathfinding;
 import tiles.GrassTrap;
+import tiles.LavaTrap;
 import tiles.MapTile;
 import tiles.MapTile.Type;
 import tiles.MudTrap;
@@ -311,13 +312,13 @@ public class ExploreController extends CarController {
 
 	private Map<Coordinate, Coordinate> nextExploreCoors(Coordinate car, List<Coordinate> outs,
 			Map<Coordinate, MapTile> view) {
+		Map<Coordinate, Coordinate> nextExploreCoors = new HashMap<>();
 		
 		/* BFS to check if there is a way to an out tile */
 		Map<Coordinate, Boolean> visited = new HashMap<>();
 		for (Coordinate key : view.keySet()) {
 			visited.put(key, false);
 		}
-		Map<Coordinate, Coordinate> nextExploreCoors = new HashMap<>();
 		List<Coordinate> availableNextCoors = availableNextCoors(view);
 		LinkedList<Coordinate> queue = new LinkedList<>();
 		Map<Coordinate, Coordinate> parent = new HashMap<>();
@@ -352,34 +353,26 @@ public class ExploreController extends CarController {
 	}
 
 	private List<Coordinate> availableNextCoors(Map<Coordinate, MapTile> view) {
-		List<Coordinate> coordinates = new ArrayList<>();
+		List<Coordinate> availableCoors = new ArrayList<>();
 		Coordinate carPos = new Coordinate(getPosition());
+		Map<Direction, Coordinate> candidates = new HashMap<>();
+		
+		candidates.put(Direction.EAST, new Coordinate(carPos.x + 1, carPos.y));
+		candidates.put(Direction.NORTH, new Coordinate(carPos.x, carPos.y + 1));
+		candidates.put(Direction.WEST, new Coordinate(carPos.x - 1, carPos.y));
+		candidates.put(Direction.SOUTH, new Coordinate(carPos.x, carPos.y - 1));
 
-		/* check NORTH */
-		Coordinate northCoordinate = new Coordinate(carPos.x, carPos.y + 1);
-		if (!view.get(northCoordinate).isType(Type.WALL) && !(view.get(northCoordinate) instanceof MudTrap)
-				&& isFeasible(Direction.NORTH, view))
-			coordinates.add(northCoordinate);
+		for (Entry<Direction, Coordinate> entry : candidates.entrySet()) {
+			Direction dir = entry.getKey();
+			Coordinate coor = entry.getValue();
+			if (!view.get(coor).isType(Type.WALL) && !(view.get(coor) instanceof MudTrap)
+					&& !(view.get(coor) instanceof LavaTrap)
+					&& isFeasible(dir, view)) {
+				availableCoors.add(coor);
+			}
+		}
 
-		/* check EAST */
-		Coordinate eastCoordinate = new Coordinate(carPos.x + 1, carPos.y);
-		if (!view.get(eastCoordinate).isType(Type.WALL) && !(view.get(northCoordinate) instanceof MudTrap)
-				&&isFeasible(Direction.EAST, view))
-			coordinates.add(eastCoordinate);
-
-		/* check SOUTH */
-		Coordinate southCoordinate = new Coordinate(carPos.x, carPos.y - 1);
-		if (!view.get(southCoordinate).isType(Type.WALL) && !(view.get(northCoordinate) instanceof MudTrap)
-				&&isFeasible(Direction.SOUTH, view))
-			coordinates.add(southCoordinate);
-
-		/* check WEST */
-		Coordinate westCoordinate = new Coordinate(carPos.x - 1, carPos.y);
-		if (!view.get(westCoordinate).isType(Type.WALL) && !(view.get(northCoordinate) instanceof MudTrap)
-				&&isFeasible(Direction.WEST, view))
-			coordinates.add(westCoordinate);
-
-		return coordinates;
+		return availableCoors;
 	}
 
 	private List<Coordinate> getNeighbour(Coordinate v, Map<Coordinate, MapTile> view) {

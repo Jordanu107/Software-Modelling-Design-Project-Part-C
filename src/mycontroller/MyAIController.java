@@ -23,23 +23,23 @@ public class MyAIController extends CarController{
 
 	}
 	
-	boolean lastAccelForward = true;  // Initial value doesn't matter as speed starts as zero
-	
-	@Override
-	public float getSpeed() {
-	return lastAccelForward ? super.getSpeed() : -super.getSpeed();
-	}
-
-	@Override
-	public void applyForwardAcceleration(){ 
-		super.applyForwardAcceleration();
-		lastAccelForward = true;
-	}
-
-	@Override
-	public void applyReverseAcceleration(){
-		super.applyReverseAcceleration();
-		lastAccelForward = false;
-	}
+//	boolean lastAccelForward = true;  // Initial value doesn't matter as speed starts as zero
+//	
+//	@Override
+//	public float getSpeed() {
+//	return lastAccelForward ? super.getSpeed() : -super.getSpeed();
+//	}
+//
+//	@Override
+//	public void applyForwardAcceleration(){ 
+//		super.applyForwardAcceleration();
+//		lastAccelForward = true;
+//	}
+//
+//	@Override
+//	public void applyReverseAcceleration(){
+//		super.applyReverseAcceleration();
+//		lastAccelForward = false;
+//	}
 
 }
