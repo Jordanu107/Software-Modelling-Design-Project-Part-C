@@ -1,14 +1,7 @@
 package mycontroller;
 
-import java.util.HashMap;
-
 import controller.CarController;
-import mycontroller.map.Mapping;
-import tiles.LavaTrap;
-import tiles.MapTile;
-import utilities.Coordinate;
 import world.Car;
-import world.World;
 
 public class MyAIController extends CarController{
 	
@@ -20,13 +13,11 @@ public class MyAIController extends CarController{
 	public MyAIController(Car car) {
 		super(car);
 		exploreController = new ExploreController(car);
-
 	}
 
 	@Override
 	public void update() {
 		exploreController.update();
-
 	}
 
 }

@@ -27,8 +27,8 @@ public class Mapping {
 		return Mapping.instance;
 	}
 	
-	public HashMap<Coordinate, Integer> keys;
-	public HashMap<Coordinate, MapTile> pointsOfInterest;
+	private HashMap<Coordinate, Integer> keys;
+	private HashMap<Coordinate, MapTile> pointsOfInterest;
 	private ArrayList<Coordinate> deadEnds;
 	
 	public Mapping() {
