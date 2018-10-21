@@ -31,10 +31,8 @@ public class Navigator {
 	
 	
 	public void update() {
-		if (path == null) return;
-		
-		// if we are done, no need to move
-		if (currentStep >= path.getLength() - 1) {
+		System.out.println(currentStep + ": " + path.getStep(currentStep));
+		if (!isNavigating()) {
 			car.applyBrake();
 			return;
 		}
@@ -79,7 +77,7 @@ public class Navigator {
 	}
 	
 	public boolean isNavigating() {
-		return path != null && currentStep < path.getLength();
+		return path != null && currentStep < path.getLength()-1;
 	}
 	
 	
