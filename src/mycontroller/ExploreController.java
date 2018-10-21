@@ -33,7 +33,7 @@ public class ExploreController extends CarController {
 	
 	private Mapping mapping;
 
-	private Map<Coordinate, Boolean> isRoadExplored;
+//	private Map<Coordinate, Boolean> isRoadExplored;
 
 	private List<Coordinate> path;
 
@@ -60,7 +60,7 @@ public class ExploreController extends CarController {
 		mapping.initialize(getMap());
 //		map = getMap();
 //		map = World.mapTiles;
-		isRoadExplored = new HashMap<>();
+//		isRoadExplored = new HashMap<>();
 //		for (Entry<Coordinate, MapTile> entry : map.entrySet()) {
 //			if (!entry.getValue().isType(Type.WALL) && !entry.getValue().isType(Type.EMPTY))
 //				isRoadExplored.put(entry.getKey(), false);
@@ -80,12 +80,14 @@ public class ExploreController extends CarController {
 		mapping.articulateViewPoint(view);
 		if (navigator.isNavigating()) {
 			navigator.update();
+			moveStatus = MoveStatus.FORWARD;
 			System.out.println("Car Position: " + getPosition());
 			System.out.println(helpPath.path);
 			return;
 		}
 		if (isStuck()) {
 			System.out.println("-----------Stuck!-------------");
+			recordPath = new ArrayList<>();
 			if (moveStatus == MoveStatus.FORWARD) {
 				moveBackward();
 			} else if (moveStatus == MoveStatus.BACKWARD) {
@@ -94,6 +96,8 @@ public class ExploreController extends CarController {
 			helpPath = buildHelpPath();
 			if (helpPath != null) {
 				navigator = new Navigator(this, helpPath);
+				path.addAll(helpPath.path);
+				removeDuplicatePath();
 			} else {
 				System.out.println("Finished exploring!");
 			}
@@ -119,7 +123,7 @@ public class ExploreController extends CarController {
 
 	private Path buildHelpPath() {
 		Path path = null;
-		for (Entry<Coordinate, Boolean> isExplored : isRoadExplored.entrySet()) {
+		for (Entry<Coordinate, Boolean> isExplored : mapping.getIsRoadExplored().entrySet()) {
 			if (!isExplored.getValue() && isNeighbourExplored(isExplored.getKey())) {
 				path = Pathfinding.linkPoints(myAIController, isExplored.getKey());
 				if (path != null)
@@ -135,6 +139,7 @@ public class ExploreController extends CarController {
 		neighbours.add(new Coordinate(point.x - 1, point.y));
 		neighbours.add(new Coordinate(point.x, point.y + 1));
 		neighbours.add(new Coordinate(point.x, point.y - 1));
+		Map<Coordinate, Boolean> isRoadExplored = mapping.getIsRoadExplored();
 		for (Coordinate neighbour : neighbours) {
 			if (isRoadExplored.containsKey(neighbour) && isRoadExplored.get(neighbour)) {
 				return true;
@@ -213,10 +218,9 @@ public class ExploreController extends CarController {
 				adjacents.add(new Coordinate(outX, outY - 1));
 			}
 			for (Coordinate adj : adjacents) {
-				if (mapping.containsCoordinate(adj) && !mapping.getTile(adj).isType(Type.WALL) && !mapping.isExplored(adj)) { // adj is
-																											// valid to
-																											// be
-																											// explored
+				
+				/* If adj is valid to be explored */
+				if (mapping.containsCoordinate(adj) && !mapping.getTile(adj).isType(Type.WALL) && !mapping.isExplored(adj)) {
 					Direction direction = coordinateToDirection(carPos, entry.getValue());
 					nextMoves.put(direction, entry.getValue());
 				}
@@ -224,7 +228,7 @@ public class ExploreController extends CarController {
 		}
 		if (!nextMoves.isEmpty()) {
 
-			/* always go the most right direction at branches */
+			/* Always go the most right direction at branches */
 			Direction carFace = getOrientation();
 			Direction right = WorldSpatial.changeDirection(carFace, RelativeDirection.RIGHT);
 			Direction left = WorldSpatial.changeDirection(carFace, RelativeDirection.LEFT);
@@ -259,9 +263,11 @@ public class ExploreController extends CarController {
 		if (!isBacktracing) {
 			isBacktracing = true;
 		}
-		Direction nextDir = coordinateToDirection(carPos, path.get(path.size() - 2));
-		if (!(moveStatus == MoveStatus.FORWARD && nextDir.equals(WorldSpatial.reverseDirection(getOrientation())))
-				&& !(moveStatus == MoveStatus.BACKWARD && nextDir.equals(getOrientation()))) {
+		
+		/* check if car needs to brake when beginning backtracing */
+		Direction nextDir = coordinateToDirection(carPos, path.get(path.size() - 2));	// direction of carPos -> the first coordinate in backtrace
+		if (!(moveStatus == MoveStatus.FORWARD && WorldSpatial.reverseDirection(getOrientation()).equals(nextDir))
+				&& !(moveStatus == MoveStatus.BACKWARD && getOrientation().equals(nextDir))) {
 			path.remove(carPos);
 		}
 		Coordinate previousCoor = path.remove(path.size() - 1);
@@ -305,6 +311,8 @@ public class ExploreController extends CarController {
 
 	private Map<Coordinate, Coordinate> nextExploreCoors(Coordinate car, List<Coordinate> outs,
 			Map<Coordinate, MapTile> view) {
+		
+		/* BFS to check if there is a way to an out tile */
 		Map<Coordinate, Boolean> visited = new HashMap<>();
 		for (Coordinate key : view.keySet()) {
 			visited.put(key, false);
@@ -313,8 +321,6 @@ public class ExploreController extends CarController {
 		List<Coordinate> availableNextCoors = availableNextCoors(view);
 		LinkedList<Coordinate> queue = new LinkedList<>();
 		Map<Coordinate, Coordinate> parent = new HashMap<>();
-
-		/* BFS to check if there is a way to an out tile */
 		queue.add(car);
 		visited.put(car, true);
 		while (!queue.isEmpty()) {
@@ -357,17 +363,20 @@ public class ExploreController extends CarController {
 
 		/* check EAST */
 		Coordinate eastCoordinate = new Coordinate(carPos.x + 1, carPos.y);
-		if (!view.get(eastCoordinate).isType(Type.WALL) && isFeasible(Direction.EAST, view))
+		if (!view.get(eastCoordinate).isType(Type.WALL) && !(view.get(northCoordinate) instanceof MudTrap)
+				&&isFeasible(Direction.EAST, view))
 			coordinates.add(eastCoordinate);
 
 		/* check SOUTH */
 		Coordinate southCoordinate = new Coordinate(carPos.x, carPos.y - 1);
-		if (!view.get(southCoordinate).isType(Type.WALL) && isFeasible(Direction.SOUTH, view))
+		if (!view.get(southCoordinate).isType(Type.WALL) && !(view.get(northCoordinate) instanceof MudTrap)
+				&&isFeasible(Direction.SOUTH, view))
 			coordinates.add(southCoordinate);
 
 		/* check WEST */
 		Coordinate westCoordinate = new Coordinate(carPos.x - 1, carPos.y);
-		if (!view.get(westCoordinate).isType(Type.WALL) && isFeasible(Direction.WEST, view))
+		if (!view.get(westCoordinate).isType(Type.WALL) && !(view.get(northCoordinate) instanceof MudTrap)
+				&&isFeasible(Direction.WEST, view))
 			coordinates.add(westCoordinate);
 
 		return coordinates;

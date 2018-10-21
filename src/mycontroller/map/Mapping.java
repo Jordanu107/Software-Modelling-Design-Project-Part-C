@@ -33,8 +33,12 @@ public class Mapping {
 	private HashMap<Coordinate, Integer> keys;
 	private HashMap<Coordinate, MapTile> mapTiles;
 	private ArrayList<Coordinate> deadEnds;
-	private HashMap<Coordinate, Boolean> isRoadExplored;
+	private Map<Coordinate, Boolean> isRoadExplored;
 	
+	public Map<Coordinate, Boolean> getIsRoadExplored() {
+		return isRoadExplored;
+	}
+
 	public Mapping() {
 		keys = new HashMap<>();
 		mapTiles = new HashMap<>();
