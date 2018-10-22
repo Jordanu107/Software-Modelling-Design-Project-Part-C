@@ -28,7 +28,14 @@ public class Navigator {
 	public Navigator(CarController car, Path path) {
 		this.car = car;
 		this.path = path;
-		moveStatus = MoveStatus.STOP;
+		
+		if((int)car.getSpeed() > 0) {
+			moveStatus = MoveStatus.FORWARD;
+		} else if ((int)car.getSpeed() < 0) {
+			moveStatus = MoveStatus.BACKWARD;
+		} else {
+			moveStatus = MoveStatus.STOP;
+		}
 		currentStep = 0;
 	}
 	
