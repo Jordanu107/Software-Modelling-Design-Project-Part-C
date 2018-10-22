@@ -44,16 +44,17 @@ public class EscapeController extends CarController {
 	 * @return
 	 */
 	public boolean initialiseNavigation() {
-		System.out.println("Escape: looking for success path...");
+		// we are already navigating, so all is good.
+		if (navigator != null && navigator.isNavigating()) {
+			return true;
+		}
+		
 		Path path = findSuccessPath();
 		this.navigator = new Navigator(this, path);
 		
 		if (path == null) {
-			System.out.println("Escape: did not find success path.");
 			return false;
 		} else {
-			System.out.println("Escape: found success path.");
-			//System.out.println(path.getCoords());
 			return true;
 		}
 	}
