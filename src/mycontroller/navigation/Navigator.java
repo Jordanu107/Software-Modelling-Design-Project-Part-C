@@ -48,7 +48,7 @@ public class Navigator {
 			return moveStatus;
 		}
 		
-		System.out.println(path.getCoords());
+//		System.out.println(path.getCoords());
 		MoveStatus desiredMoveStatus = moveStatus;
 
 		Direction direction = path.getDirectionAtStep(currentStep);

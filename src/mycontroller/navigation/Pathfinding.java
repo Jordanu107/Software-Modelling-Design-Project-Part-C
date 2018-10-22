@@ -1,11 +1,8 @@
 package mycontroller.navigation;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Set;
 
 import controller.CarController;
@@ -373,30 +370,4 @@ public class Pathfinding {
 		return car;
 	}
 	
-	/**
-	 * Special method that can permit a tile to be considered more than once under certain conditions.
-	 * Be careful to ensure that this does not affect the correctness of the algorithm.
-	 * @param car
-	 * @param destination
-	 * @param path
-	 * @return
-	 *//*
-	private static boolean canRepeat(PseudoCar car, Coordinate destination, Path path) {
-		// special case for grass traps
-		if (Mapping.getMap().getMapTiles().get(destination) instanceof GrassTrap) {
-			// we permit re-entering grass IF AND ONLY IF the grass has not been entered from this direction before
-			Direction dir = Path.fromToDirection(car.position, destination);
-			for (int i = 1; i < path.getLength(); i++) {
-				Coordinate before = path.getStep(i-1);
-				Coordinate after = path.getStep(i);
-				if (after.equals(destination) && Path.fromToDirection(before, after) == dir) {
-					return false;
-				}
-			}
-			
-			return true;
-		}
-		
-		return false;
-	}*/
 }

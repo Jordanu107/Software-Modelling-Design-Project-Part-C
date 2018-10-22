@@ -80,7 +80,7 @@ public class ExploreController extends CarController {
 		}
 		if (navigator.isNavigating()) {
 			moveStatus = navigator.update();
-			System.out.println("Car Position: " + getPosition());
+//			System.out.println("Car Position: " + getPosition());
 //			System.out.println(helpPath.path);
 			return;
 		} else {
@@ -88,13 +88,13 @@ public class ExploreController extends CarController {
 				isApproachingToKey = false;
 		}
 		if (isStuck() || onLava(new Coordinate(getPosition()), view) && !navigator.isNavigating()) {
-			System.out.println("-----------Calling Pathfinding!-------------");
+//			System.out.println("-----------Calling Pathfinding!-------------");
 			recordPath = new ArrayList<>();
 			createHelpPath();
 			return;
 		}
 		if (isBacktracing && path.size() < 2) {
-			System.out.println("---------Going back!----------");
+//			System.out.println("---------Going back!----------");
 			createHelpPath();
 			return;
 		}
@@ -149,14 +149,14 @@ public class ExploreController extends CarController {
 
 		Path keyPath = buildHelpPath(keyCoor);
 		if (keyPath != null) {
-			System.out.println("Go to key!");
+//			System.out.println("Go to key!");
 			navigator = new Navigator(this, new Path(keyPath));
 			path.addAll(keyPath.getCoords());
 			removeDuplicatePath();
 			navigator.update();
 			return true;
 		}
-		System.out.println("Seen key not reachable!");
+//		System.out.println("Seen key not reachable!");
 		return false;
 	}
 
@@ -168,13 +168,13 @@ public class ExploreController extends CarController {
 
 		helpPath = buildHelpPath(null);
 		if (helpPath != null) {
-			System.out.println("Found an unvisted point!");
+//			System.out.println("Found an unvisted point!");
 			navigator = new Navigator(this, new Path(helpPath));
 			path.addAll(helpPath.getCoords());
 			removeDuplicatePath();
 			navigator.update();
 		} else {
-			System.out.println("Finished exploring!");
+//			System.out.println("Finished exploring!");
 			finishedExplore = true;
 		}
 	}
@@ -186,29 +186,33 @@ public class ExploreController extends CarController {
 			return path;
 		}
 		for (Entry<Coordinate, Boolean> isExplored : mapping.getIsRoadExplored().entrySet()) {
-			Coordinate neighbour = isNeighbourExplored(isExplored.getKey());
-			if (!isExplored.getValue() && neighbour != null) {
-				path = Pathfinding.linkPoints(this, neighbour);
-				if (path != null)
-					return path;
+			if (!isExplored.getValue()) {
+				List<Coordinate> neighbours = getExploredNeighbour(isExplored.getKey());
+				for (Coordinate neighbour : neighbours) {
+					path = Pathfinding.linkPoints(this, neighbour);
+					if (path != null)
+						return path;
+				}
 			}
 		}
 		return path;
 	}
 
-	private Coordinate isNeighbourExplored(Coordinate point) {
+	private List <Coordinate> getExploredNeighbour(Coordinate point) {
 		List<Coordinate> neighbours = new ArrayList<>();
 		neighbours.add(new Coordinate(point.x + 1, point.y));
 		neighbours.add(new Coordinate(point.x - 1, point.y));
 		neighbours.add(new Coordinate(point.x, point.y + 1));
 		neighbours.add(new Coordinate(point.x, point.y - 1));
 		Map<Coordinate, Boolean> isRoadExplored = mapping.getIsRoadExplored();
-		for (Coordinate neighbour : neighbours) {
-			if (isRoadExplored.containsKey(neighbour) && isRoadExplored.get(neighbour)) {
-				return neighbour;
+		Iterator<Coordinate> iter = neighbours.iterator();
+		while(iter.hasNext()) {
+			Coordinate c = iter.next();
+			if (!isRoadExplored.containsKey(c) || !isRoadExplored.get(c)) {
+				iter.remove();
 			}
 		}
-		return null;
+		return neighbours;
 	}
 
 	private MoveEntry nextExploreDirection(Map<Coordinate, MapTile> view) {
@@ -304,9 +308,9 @@ public class ExploreController extends CarController {
 			}
 			path.add(nextMoves.get(next));
 			removeDuplicatePath();
-			System.out.println(nextMoves.get(next) + " added to path.");
-			System.out.println(path);
-			System.out.println("Car position: " + carPos);
+//			System.out.println(nextMoves.get(next) + " added to path.");
+//			System.out.println(path);
+//			System.out.println("Car position: " + carPos);
 			return new MoveEntry(next, nextMoves.get(next));
 		}
 
@@ -326,9 +330,9 @@ public class ExploreController extends CarController {
 			path.remove(carPos);
 		}
 		Coordinate previousCoor = path.remove(path.size() - 1);
-		System.out.println(path);
-		System.out.println("Backtrace: " + previousCoor);
-		System.out.println("Car position: " + carPos);
+//		System.out.println(path);
+//		System.out.println("Backtrace: " + previousCoor);
+//		System.out.println("Car position: " + carPos);
 
 		return new MoveEntry(coordinateToDirection(carPos, previousCoor), previousCoor);
 	}
@@ -471,18 +475,18 @@ public class ExploreController extends CarController {
 	}
 
 	private void moveInDirection(Direction direction) {
-		System.out.println("Go " + direction);
+//		System.out.println("Go " + direction);
 		if (getOrientation() == direction) {
-			System.out.println("Forward");
+//			System.out.println("Forward");
 			moveForward();
 		} else if (WorldSpatial.reverseDirection(getOrientation()) == direction) {
-			System.out.println("Backward");
+//			System.out.println("Backward");
 			moveBackward();
 		} else if (WorldSpatial.changeDirection(getOrientation(), RelativeDirection.LEFT) == direction) {
-			System.out.println("Left");
+//			System.out.println("Left");
 			turnLeft();
 		} else if (WorldSpatial.changeDirection(getOrientation(), RelativeDirection.RIGHT) == direction) {
-			System.out.println("Right");
+//			System.out.println("Right");
 			turnRight();
 		} else { // if direction is null
 			applyBrake();
