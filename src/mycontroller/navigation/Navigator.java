@@ -28,9 +28,17 @@ public class Navigator {
 	public Navigator(CarController car, Path path) {
 		this.car = car;
 		this.path = path;
+
+		if((int)car.getSpeed() > 0) {
+		moveStatus = MoveStatus.FORWARD;
+		} else if ((int)car.getSpeed() < 0) {
+		moveStatus = MoveStatus.BACKWARD;
+		} else {
 		moveStatus = MoveStatus.STOP;
+		}
 		currentStep = 0;
-	}
+		}
+
 	
 	
 	public MoveStatus update() {
@@ -40,6 +48,7 @@ public class Navigator {
 			return moveStatus;
 		}
 		
+		System.out.println(path.getCoords());
 		MoveStatus desiredMoveStatus = moveStatus;
 
 		Direction direction = path.getDirectionAtStep(currentStep);

@@ -97,7 +97,7 @@ public class Mapping {
 	}
 	
 	public boolean isExplored(Coordinate coordinate) {
-		return isRoadExplored.get(coordinate);
+		return isRoadExplored.containsKey(coordinate) && isRoadExplored.get(coordinate);
 	}
 	
 	public void articulateViewPoint(Map<Coordinate, MapTile> currentView) {

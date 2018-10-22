@@ -87,7 +87,7 @@ public class ExploreController extends CarController {
 			if (isApproachingToKey)
 				isApproachingToKey = false;
 		}
-		if (isStuck() || onKey(new Coordinate(getPosition()), view)) {
+		if (isStuck() || onLava(new Coordinate(getPosition()), view) && !navigator.isNavigating()) {
 			System.out.println("-----------Calling Pathfinding!-------------");
 			recordPath = new ArrayList<>();
 			createHelpPath();
@@ -109,10 +109,11 @@ public class ExploreController extends CarController {
 
 	}
 
-	private boolean onKey(Coordinate coordinate, Map<Coordinate, MapTile> view) {
+	private boolean onLava(Coordinate coordinate, Map<Coordinate, MapTile> view) {
 		if (view.get(coordinate) instanceof LavaTrap) {
-			LavaTrap lava = (LavaTrap) view.get(coordinate);
-			return lava.getKey() > 0;
+//			LavaTrap lava = (LavaTrap) view.get(coordinate);
+//			return lava.getKey() > 0 && !getKeys().contains(lava.getKey());
+			return true;
 		}
 		return false;
 	}
@@ -143,15 +144,16 @@ public class ExploreController extends CarController {
 	private boolean createKeyPath(Coordinate keyCoor) {
 
 		/* Brake the car first */
-		applyBrake();
-		moveStatus = MoveStatus.STOP;
+//		applyBrake();
+//		moveStatus = MoveStatus.STOP;
 
 		Path keyPath = buildHelpPath(keyCoor);
 		if (keyPath != null) {
 			System.out.println("Go to key!");
-			navigator = new Navigator(this, keyPath);
+			navigator = new Navigator(this, new Path(keyPath));
 			path.addAll(keyPath.path);
 			removeDuplicatePath();
+			navigator.update();
 			return true;
 		}
 		System.out.println("Seen key not reachable!");
@@ -161,15 +163,16 @@ public class ExploreController extends CarController {
 	private void createHelpPath() {
 
 		/* Brake the car first */
-		applyBrake();
-		moveStatus = MoveStatus.STOP;
+//		applyBrake();
+//		moveStatus = MoveStatus.STOP;
 
 		helpPath = buildHelpPath(null);
 		if (helpPath != null) {
 			System.out.println("Found an unvisted point!");
-			navigator = new Navigator(this, helpPath);
+			navigator = new Navigator(this, new Path(helpPath));
 			path.addAll(helpPath.path);
 			removeDuplicatePath();
+			navigator.update();
 		} else {
 			System.out.println("Finished exploring!");
 			finishedExplore = true;
@@ -183,8 +186,9 @@ public class ExploreController extends CarController {
 			return path;
 		}
 		for (Entry<Coordinate, Boolean> isExplored : mapping.getIsRoadExplored().entrySet()) {
-			if (!isExplored.getValue() && isNeighbourExplored(isExplored.getKey())) {
-				path = Pathfinding.linkPoints(this, isExplored.getKey());
+			Coordinate neighbour = isNeighbourExplored(isExplored.getKey());
+			if (!isExplored.getValue() && neighbour != null) {
+				path = Pathfinding.linkPoints(this, neighbour);
 				if (path != null)
 					return path;
 			}
@@ -192,7 +196,7 @@ public class ExploreController extends CarController {
 		return path;
 	}
 
-	private boolean isNeighbourExplored(Coordinate point) {
+	private Coordinate isNeighbourExplored(Coordinate point) {
 		List<Coordinate> neighbours = new ArrayList<>();
 		neighbours.add(new Coordinate(point.x + 1, point.y));
 		neighbours.add(new Coordinate(point.x - 1, point.y));
@@ -201,10 +205,10 @@ public class ExploreController extends CarController {
 		Map<Coordinate, Boolean> isRoadExplored = mapping.getIsRoadExplored();
 		for (Coordinate neighbour : neighbours) {
 			if (isRoadExplored.containsKey(neighbour) && isRoadExplored.get(neighbour)) {
-				return true;
+				return neighbour;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	private MoveEntry nextExploreDirection(Map<Coordinate, MapTile> view) {
@@ -539,4 +543,22 @@ public class ExploreController extends CarController {
 		}
 	}
 
+	boolean lastAccelForward = true; // Initial value doesn't matter as speed starts as zero
+
+	@Override
+	public float getSpeed() {
+	return lastAccelForward ? super.getSpeed() : -super.getSpeed();
+	}
+
+	@Override
+	public void applyForwardAcceleration(){ 
+	super.applyForwardAcceleration();
+	lastAccelForward = true;
+	}
+
+	@Override
+	public void applyReverseAcceleration(){
+	super.applyReverseAcceleration();
+	lastAccelForward = false;
+	}
 }
