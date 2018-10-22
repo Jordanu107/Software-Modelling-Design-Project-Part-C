@@ -20,11 +20,11 @@ import world.Car;
  * @author Lawson Wang-Wills
  *
  */
-public class Escape extends CarController {
+public class EscapeController extends CarController {
 	
 	private Navigator navigator;
 	
-	public Escape(Car car) {
+	public EscapeController(Car car) {
 		super(car);
 
 		initialiseNavigation();
