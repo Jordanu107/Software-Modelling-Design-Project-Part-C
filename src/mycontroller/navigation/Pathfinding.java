@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -246,13 +247,13 @@ public class Pathfinding {
 		}
 		
 		
-		HashMap<Coordinate, MapTile> map = Mapping.getMap().getMapTiles();
-		
+		Map<Coordinate, Boolean> tilesExplored = Mapping.getMap().getIsRoadExplored();
 		// check that we know about the start and destination
-		if (!(map.containsKey(start) && map.containsKey(destination))) {
+		if (!(tilesExplored.get(start) && tilesExplored.get(destination))) {
 			return false;
 		}
-		
+
+		HashMap<Coordinate, MapTile> map = Mapping.getMap().getMapTiles();
 		MapTile startTile = map.get(start);
 		MapTile destinationTile = map.get(destination);
 		
@@ -380,7 +381,7 @@ public class Pathfinding {
 	 * @param destination
 	 * @param path
 	 * @return
-	 */
+	 *//*
 	private static boolean canRepeat(PseudoCar car, Coordinate destination, Path path) {
 		// special case for grass traps
 		if (Mapping.getMap().getMapTiles().get(destination) instanceof GrassTrap) {
@@ -398,5 +399,5 @@ public class Pathfinding {
 		}
 		
 		return false;
-	}
+	}*/
 }
