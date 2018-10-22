@@ -246,10 +246,9 @@ public class Pathfinding {
 			return false;
 		}
 		
-		
-		Map<Coordinate, Boolean> tilesExplored = Mapping.getMap().getIsRoadExplored();
+
 		// check that we know about the start and destination
-		if (!(tilesExplored.get(start) && tilesExplored.get(destination))) {
+		if (!(Mapping.getMap().isExplored(start) && Mapping.getMap().isExplored(destination))) {
 			return false;
 		}
 
