@@ -34,12 +34,13 @@ public class Navigator {
 	
 	
 	public MoveStatus update() {
-		System.out.println(currentStep + ": " + path.getStep(currentStep));
 		if (!isNavigating()) {
 			car.applyBrake();
 			moveStatus = MoveStatus.STOP;
 			return moveStatus;
 		}
+		
+		MoveStatus desiredMoveStatus = moveStatus;
 
 		Direction direction = path.getDirectionAtStep(currentStep);
 		boolean repeatStep = false; // we may not be able to proceed to the next step of the path immediately
@@ -54,17 +55,20 @@ public class Navigator {
 		// check for reverse
 		else if (WorldSpatial.reverseDirection(car.getOrientation()) == direction) {
 			moveBackward();
+			desiredMoveStatus = MoveStatus.BACKWARD;
 		}
 		else if (car.getOrientation() == direction) {
 			moveForward();
+			desiredMoveStatus = MoveStatus.FORWARD;
 		} else if (null == direction){
 			// the car remains stationary
 			car.applyBrake();
 			moveStatus = MoveStatus.STOP;
+			desiredMoveStatus = MoveStatus.STOP;
 		}
 		
 		
-		if (!repeatStep) {
+		if (moveStatus == desiredMoveStatus) {
 			currentStep++;
 		}
 		return moveStatus;

@@ -65,7 +65,7 @@ public class Pathfinding {
 			carControl.getHealth(),
 			carControl.getOrientation(),
 			new Coordinate(carControl.getPosition()),
-			carControl.getSpeed() != 0
+			((int) carControl.getSpeed()) != 0
 		);
 		
 		
