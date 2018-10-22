@@ -253,9 +253,8 @@ public class Pathfinding {
 			return false;
 		}
 
-		HashMap<Coordinate, MapTile> map = Mapping.getMap().getMapTiles();
-		MapTile startTile = map.get(start);
-		MapTile destinationTile = map.get(destination);
+		MapTile startTile = Mapping.getMap().getTile(start);
+		MapTile destinationTile = Mapping.getMap().getTile(destination);
 		
 		// check against tile types
 		// start tile

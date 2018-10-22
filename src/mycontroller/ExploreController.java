@@ -151,7 +151,7 @@ public class ExploreController extends CarController {
 		if (keyPath != null) {
 			System.out.println("Go to key!");
 			navigator = new Navigator(this, new Path(keyPath));
-			path.addAll(keyPath.path);
+			path.addAll(keyPath.getCoords());
 			removeDuplicatePath();
 			navigator.update();
 			return true;
@@ -170,7 +170,7 @@ public class ExploreController extends CarController {
 		if (helpPath != null) {
 			System.out.println("Found an unvisted point!");
 			navigator = new Navigator(this, new Path(helpPath));
-			path.addAll(helpPath.path);
+			path.addAll(helpPath.getCoords());
 			removeDuplicatePath();
 			navigator.update();
 		} else {

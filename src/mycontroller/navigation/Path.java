@@ -10,7 +10,7 @@ import world.WorldSpatial.Direction;
  */
 public class Path {
 	
-	public ArrayList<Coordinate> path;
+	private ArrayList<Coordinate> path;
 	
 	// starting with empty path
 	public Path() {
