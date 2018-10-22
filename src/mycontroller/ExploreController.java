@@ -38,7 +38,7 @@ public class ExploreController extends CarController {
 
 	private boolean isBacktracing;
 
-	private Path helpPath;
+	private Path helpPath;	// A path that helps to get out of stuck
 
 	private Navigator navigator;
 
@@ -64,42 +64,48 @@ public class ExploreController extends CarController {
 
 	@Override
 	public void update() {
+		/* Record view */
 		Map<Coordinate, MapTile> view = getView();
 		mapping.articulateViewPoint(view);
 		
-		/* If key exists in view and reachable, get key first */
+		/* Decide what to do next */
 		Coordinate keyCoor = uncollectedKeyInView(view);
 		if (keyCoor != null && !isApproachingToKey) {
+			// If key exists in view and reachable, get key first
 			isApproachingToKey = createKeyPath(keyCoor);
 			if (isApproachingToKey) {
-				return;	// not reachable
+				return;	// Key reachable
 			}
+			// Ignore the unreachable key
 		}
 		if (finishedExplore) {
-			System.exit(1);
+			// MyAIController will take over since now
 		}
 		if (navigator.isNavigating()) {
+			// If is navigating, updates navigator
 			moveStatus = navigator.update();
-//			System.out.println("Car Position: " + getPosition());
-//			System.out.println(helpPath.path);
 			return;
 		} else {
 			if (isApproachingToKey)
+				// If not navigating but is approaching to key, change status to not approaching to key
 				isApproachingToKey = false;
 		}
 		if (isStuck() || onLava(new Coordinate(getPosition()), view) && !navigator.isNavigating()) {
-//			System.out.println("-----------Calling Pathfinding!-------------");
+			// If it gets stuck or stays on a Lava after navigation, call Pathfinding for another navigation
 			recordPath = new ArrayList<>();
 			createHelpPath();
 			return;
 		}
 		if (isBacktracing && path.size() < 2) {
-//			System.out.println("---------Going back!----------");
+			// If it is getting to the start point, call Pathfinding for navigation to an unexplored tile
 			createHelpPath();
 			return;
 		}
-		MoveEntry moveEntry = nextExploreDirection(view);
+		
+		MoveEntry moveEntry = nextExploreDirection(view);	// If not being navigated, do classic DFS explore 
 		moveInDirection(moveEntry.direction);
+		
+		/* Record the history coordinates of last 10 steps to detect stuck */
 		if (recordPath.size() <= 10) {
 			recordPath.add(moveEntry.coordinate);
 		} else {
@@ -111,8 +117,6 @@ public class ExploreController extends CarController {
 
 	private boolean onLava(Coordinate coordinate, Map<Coordinate, MapTile> view) {
 		if (view.get(coordinate) instanceof LavaTrap) {
-//			LavaTrap lava = (LavaTrap) view.get(coordinate);
-//			return lava.getKey() > 0 && !getKeys().contains(lava.getKey());
 			return true;
 		}
 		return false;
@@ -141,44 +145,44 @@ public class ExploreController extends CarController {
 		return recordSet.size() <= 2;
 	}
 
+	/**
+	 * Create a path to a seen key if the key is reachable
+	 * @param keyCoor
+	 * @return
+	 */
 	private boolean createKeyPath(Coordinate keyCoor) {
-
-		/* Brake the car first */
-//		applyBrake();
-//		moveStatus = MoveStatus.STOP;
 
 		Path keyPath = buildHelpPath(keyCoor);
 		if (keyPath != null) {
-//			System.out.println("Go to key!");
 			navigator = new Navigator(this, new Path(keyPath));
 			path.addAll(keyPath.getCoords());
 			removeDuplicatePath();
 			navigator.update();
 			return true;
 		}
-//		System.out.println("Seen key not reachable!");
-		return false;
+		return false;	// Seen key not reachable!
 	}
 
+	/**
+	 * Create a path to an unvisited tile when begin stuck or having traced back to start point
+	 */
 	private void createHelpPath() {
-
-		/* Brake the car first */
-//		applyBrake();
-//		moveStatus = MoveStatus.STOP;
-
 		helpPath = buildHelpPath(null);
 		if (helpPath != null) {
-//			System.out.println("Found an unvisted point!");
 			navigator = new Navigator(this, new Path(helpPath));
 			path.addAll(helpPath.getCoords());
 			removeDuplicatePath();
 			navigator.update();
 		} else {
-//			System.out.println("Finished exploring!");
 			finishedExplore = true;
 		}
 	}
 
+	/**
+	 * Build a path to a destination given as end parameter. If end is null, then build a path to any unexplored tile
+	 * @param end
+	 * @return
+	 */
 	private Path buildHelpPath(Coordinate end) {
 		Path path = null;
 		if (end != null) {
@@ -198,6 +202,11 @@ public class ExploreController extends CarController {
 		return path;
 	}
 
+	/**
+	 * Get a list of neighbours of a coordinate that has been explored
+	 * @param point
+	 * @return
+	 */
 	private List <Coordinate> getExploredNeighbour(Coordinate point) {
 		List<Coordinate> neighbours = new ArrayList<>();
 		neighbours.add(new Coordinate(point.x + 1, point.y));
@@ -215,6 +224,11 @@ public class ExploreController extends CarController {
 		return neighbours;
 	}
 
+	/**
+	 * Next direction for map explore based on the current view
+	 * @param view
+	 * @return A move entry that includes both direction and the coordinate after the move
+	 */
 	private MoveEntry nextExploreDirection(Map<Coordinate, MapTile> view) {
 		Coordinate carPos = new Coordinate(getPosition());
 		List<Coordinate> possibleOut = new ArrayList<>();
@@ -256,6 +270,7 @@ public class ExploreController extends CarController {
 			}
 		}
 
+		/* Get possible next moves to an out tile with its neighbour not explored */
 		Map<Coordinate, Coordinate> candidates = nextExploreCoors(carPos, possibleOut, view);
 		Map<Direction, Coordinate> nextMoves = new HashMap<>();
 		for (Entry<Coordinate, Coordinate> entry : candidates.entrySet()) {
@@ -308,9 +323,6 @@ public class ExploreController extends CarController {
 			}
 			path.add(nextMoves.get(next));
 			removeDuplicatePath();
-//			System.out.println(nextMoves.get(next) + " added to path.");
-//			System.out.println(path);
-//			System.out.println("Car position: " + carPos);
 			return new MoveEntry(next, nextMoves.get(next));
 		}
 
@@ -330,13 +342,15 @@ public class ExploreController extends CarController {
 			path.remove(carPos);
 		}
 		Coordinate previousCoor = path.remove(path.size() - 1);
-//		System.out.println(path);
-//		System.out.println("Backtrace: " + previousCoor);
-//		System.out.println("Car position: " + carPos);
 
 		return new MoveEntry(coordinateToDirection(carPos, previousCoor), previousCoor);
 	}
 
+	/**
+	 * A util class for recording a combination of direction and the coordinate at the direction
+	 * @author jiashany
+	 *
+	 */
 	private class MoveEntry {
 		public Direction direction;
 		public Coordinate coordinate;
@@ -347,6 +361,9 @@ public class ExploreController extends CarController {
 		}
 	}
 
+	/**
+	 * Remove duplicated sub-paths in the backtracing path to avoid car moving bugs and saving time
+	 */
 	private void removeDuplicatePath() {
 		Map<Coordinate, Integer> count = new HashMap<>();
 		for (Coordinate point : path) {
@@ -368,6 +385,13 @@ public class ExploreController extends CarController {
 		}
 	}
 
+	/**
+	 * Find next possible moves and return a map with key being out tile and value being first step to reach that out tile
+	 * @param car
+	 * @param outs
+	 * @param view
+	 * @return
+	 */
 	private Map<Coordinate, Coordinate> nextExploreCoors(Coordinate car, List<Coordinate> outs,
 			Map<Coordinate, MapTile> view) {
 		Map<Coordinate, Coordinate> nextExploreCoors = new HashMap<>();
@@ -410,6 +434,11 @@ public class ExploreController extends CarController {
 
 	}
 
+	/**
+	 * Return a list of legal neighbours around the car position when running BFS
+	 * @param view
+	 * @return
+	 */
 	private List<Coordinate> availableNextCoors(Map<Coordinate, MapTile> view) {
 		List<Coordinate> availableCoors = new ArrayList<>();
 		Coordinate carPos = new Coordinate(getPosition());
@@ -432,6 +461,12 @@ public class ExploreController extends CarController {
 		return availableCoors;
 	}
 
+	/**
+	 * Get legal neighbours of a tile when running BFS
+	 * @param v
+	 * @param view
+	 * @return
+	 */
 	private List<Coordinate> getNeighbour(Coordinate v, Map<Coordinate, MapTile> view) {
 		List<Coordinate> neighbours = new ArrayList<>();
 		Coordinate carPos = new Coordinate(getPosition());
@@ -454,6 +489,13 @@ public class ExploreController extends CarController {
 		return neighbours;
 	}
 
+	/**
+	 * Backtrace the recorded path that starts from start and ends at the current car position
+	 * @param parent
+	 * @param start
+	 * @param end
+	 * @return
+	 */
 	private List<Coordinate> backtrace(Map<Coordinate, Coordinate> parent, Coordinate start, Coordinate end) {
 		List<Coordinate> path = new ArrayList<>();
 		path.add(end);
@@ -464,6 +506,12 @@ public class ExploreController extends CarController {
 		return path;
 	}
 
+	/**
+	 * If a direction is feasible to be applied to the car 
+	 * @param d
+	 * @param view
+	 * @return
+	 */
 	private boolean isFeasible(Direction d, Map<Coordinate, MapTile> view) {
 		Direction carFace = getOrientation();
 		Coordinate carPos = new Coordinate(getPosition());
@@ -474,19 +522,18 @@ public class ExploreController extends CarController {
 		return true;
 	}
 
+	/**
+	 * Move in a direction
+	 * @param direction
+	 */
 	private void moveInDirection(Direction direction) {
-//		System.out.println("Go " + direction);
 		if (getOrientation() == direction) {
-//			System.out.println("Forward");
 			moveForward();
 		} else if (WorldSpatial.reverseDirection(getOrientation()) == direction) {
-//			System.out.println("Backward");
 			moveBackward();
 		} else if (WorldSpatial.changeDirection(getOrientation(), RelativeDirection.LEFT) == direction) {
-//			System.out.println("Left");
 			turnLeft();
 		} else if (WorldSpatial.changeDirection(getOrientation(), RelativeDirection.RIGHT) == direction) {
-//			System.out.println("Right");
 			turnRight();
 		} else { // if direction is null
 			applyBrake();
@@ -494,6 +541,9 @@ public class ExploreController extends CarController {
 		}
 	}
 
+	/**
+	 * Move Forward
+	 */
 	private void moveForward() {
 		if (moveStatus == MoveStatus.BACKWARD) {
 			applyBrake();
@@ -504,6 +554,9 @@ public class ExploreController extends CarController {
 		}
 	}
 
+	/**
+	 * Move backward
+	 */
 	private void moveBackward() {
 		if (moveStatus == MoveStatus.FORWARD) {
 			applyBrake();
@@ -514,8 +567,12 @@ public class ExploreController extends CarController {
 		}
 	}
 
-	/* -------- util ----------- */
-
+	/**
+	 * Return a direction given a start and a end coordinates
+	 * @param start
+	 * @param end
+	 * @return
+	 */
 	private Direction coordinateToDirection(Coordinate start, Coordinate end) {
 		int deltaX = end.x - start.x;
 		int deltaY = end.y - start.y;
@@ -531,22 +588,9 @@ public class ExploreController extends CarController {
 		return null; // break
 	}
 
-	private Coordinate directionToCoordinate(Direction d) {
-		Coordinate car = new Coordinate(getPosition());
-		switch (d) {
-		case NORTH:
-			return new Coordinate(car.x, car.y + 1);
-		case EAST:
-			return new Coordinate(car.x + 1, car.y);
-		case SOUTH:
-			return new Coordinate(car.x, car.y - 1);
-		case WEST:
-			return new Coordinate(car.x - 1, car.y);
-		default:
-			return null;
-		}
-	}
-
+	/**
+	 * The following code are from discussion board posted by Philip to get velocity 
+	 */
 	boolean lastAccelForward = true; // Initial value doesn't matter as speed starts as zero
 
 	@Override
