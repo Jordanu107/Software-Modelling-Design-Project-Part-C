@@ -47,10 +47,14 @@ public class Mapping {
 	}
 	
 	public void initialize(HashMap<Coordinate, MapTile> map) {
-		this.mapTiles = map;
+		this.mapTiles = new HashMap<Coordinate, MapTile>(map);
+		
 		for (Entry<Coordinate, MapTile> entry : map.entrySet()) {
-			if (!entry.getValue().isType(Type.WALL) && !entry.getValue().isType(Type.EMPTY))
+			if (!entry.getValue().isType(Type.WALL) && !entry.getValue().isType(Type.EMPTY)) {
 				isRoadExplored.put(entry.getKey(), false);
+			} else {
+				isRoadExplored.put(entry.getKey(), true);
+			}
 		}
 	}
 	
