@@ -40,7 +40,7 @@ public class Navigator {
 			moveStatus = MoveStatus.STOP;
 			return moveStatus;
 		}
-
+		System.out.println(path.path);
 		Direction direction = path.getDirectionAtStep(currentStep);
 		boolean repeatStep = false; // we may not be able to proceed to the next step of the path immediately
 		
