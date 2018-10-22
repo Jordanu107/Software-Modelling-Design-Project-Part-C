@@ -1,6 +1,7 @@
 package mycontroller;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -118,8 +119,17 @@ public class Escape extends CarController {
 			doneKeys.add(keys.get(key));
 		}
 		
+		ArrayList<Coordinate> keysByDistance = new ArrayList<Coordinate>(keys.keySet());
+		keysByDistance.sort(new Comparator<Coordinate>() {
+				public int compare(Coordinate a, Coordinate b) {
+					Coordinate origin = new Coordinate(getPosition());
+					return distance(origin, a) - distance(origin, b);
+				}
+			}
+		);
+		
 		// try each combination of keys
-		for (Coordinate key : keys.keySet()) {
+		for (Coordinate key : keysByDistance) {
 			// have we already gotten a key of this type?
 			if (doneKeys.contains(keys.get(key))) {
 				continue;
@@ -156,6 +166,10 @@ public class Escape extends CarController {
 	
 
 	
-	
-
+	/**
+	 * Manhattan distance between two points.
+	 */
+	private int distance(Coordinate a, Coordinate b) {
+		return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+	}
 }
