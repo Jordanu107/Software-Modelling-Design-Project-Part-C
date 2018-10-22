@@ -39,7 +39,7 @@ public class World {
 	
 	private static String[] LAYER_NAME = {"Road","Utility","Trap","Wall"};
 	
-	public static HashMap<Coordinate,MapTile> mapTiles = new HashMap<Coordinate,MapTile>();
+	private static HashMap<Coordinate,MapTile> mapTiles = new HashMap<Coordinate,MapTile>();
 	private static HashMap<Coordinate,MapTile> providedMapTiles = new HashMap<Coordinate,MapTile>();
 	private static Coordinate start, carStart;
 	private static List<Coordinate> finish = new ArrayList<Coordinate>();
