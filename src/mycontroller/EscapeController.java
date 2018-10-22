@@ -74,10 +74,10 @@ public class EscapeController extends CarController {
 			accessibleKeys.add(key);
 		}
 		if (accessibleKeys.size() < maxKeys) {
-			System.out.println("Escape: failed Key Check.");
+			//System.out.println("Escape: failed Key Check.");
 			return null;
 		}
-		System.out.println("Escape: passed Key Check.");
+		//System.out.println("Escape: passed Key Check.");
 		
 		
 		/* DEFINE GOALS */

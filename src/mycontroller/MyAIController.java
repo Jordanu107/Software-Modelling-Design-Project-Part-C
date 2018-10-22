@@ -7,6 +7,7 @@ import world.Car;
 public class MyAIController extends CarController{
 	
 	private ExploreController exploreController;
+	private EscapeController escapeController;
 	
 	// Car Speed to move at
 	public static final int CAR_MAX_SPEED = 1;
@@ -17,33 +18,18 @@ public class MyAIController extends CarController{
 	
 	public MyAIController(Car car) {
 		super(car);
+		
 		exploreController = new ExploreController(car, this);
-
+		escapeController = new EscapeController(car);
 	}
 
 	@Override
 	public void update() {
-		exploreController.update();
+		if (!escapeController.initialiseNavigation()) {
+			exploreController.update();
+		} else {
+			escapeController.update();
+		}
 
 	}
-	
-//	boolean lastAccelForward = true;  // Initial value doesn't matter as speed starts as zero
-//	
-//	@Override
-//	public float getSpeed() {
-//	return lastAccelForward ? super.getSpeed() : -super.getSpeed();
-//	}
-//
-//	@Override
-//	public void applyForwardAcceleration(){ 
-//		super.applyForwardAcceleration();
-//		lastAccelForward = true;
-//	}
-//
-//	@Override
-//	public void applyReverseAcceleration(){
-//		super.applyReverseAcceleration();
-//		lastAccelForward = false;
-//	}
-
 }
